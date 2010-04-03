@@ -35,9 +35,13 @@ module Modesty
       @parent = parent
     end
 
-    def track!
-      puts ":#{@slug} is supposed to be tracked now!"
-      @parent.track! if @parent
+    def redis_key
+      "modesty:metrics:#{@slug.to_s.gsub(/\//,':')}"
+    end
+
+    def track!(count = 1)
+      Modesty.redis.incrby(self.redis_key, count)
+      @parent.track!(count) if @parent
     end
   end
 
@@ -71,6 +75,11 @@ module Modesty
       yield Metric::Builder.new(metric) if block
       add_metric(metric)
       metric
+    end
+
+    #Redis
+    def redis
+      @redis ||= self::MockRedis.new
     end
   end
 end
