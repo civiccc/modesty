@@ -30,6 +30,7 @@ module Modesty
 
     attr_reader *ATTRIBUTES 
     attr_reader :slug
+    attr_reader :metrics
 
     def choose #TODO: real identification
       @alternatives[rand(@alternatives.count)]

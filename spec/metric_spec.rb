@@ -55,6 +55,7 @@ describe Modesty::Metric, "Tracking Metrics" do
   end
 
   before :all do
+    Modesty.metrics = {}
     Modesty.new_metric :foo do |foo|
       foo.description "Foo"
 
