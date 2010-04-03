@@ -32,14 +32,18 @@ module Modesty
     attr_reader :slug
     attr_reader :metrics
 
-    def choose #TODO: real identification
-      @alternatives[rand(@alternatives.count)]
+    def ab_test
+      @alternatives[Modesty.identity % @alternatives.count]
+    end
+
+    def ab_test? alt
+      self.ab_test == alt
     end
   end
 
   module ExperimentMethods
     attr_reader :experiments
-    
+
     def add_experiment(exp)
       @experiments ||= {}
       raise "Experiment already defined!" if @experiments[exp.slug]
@@ -67,7 +71,7 @@ module Modesty
     def ab_test(sym, &blk)
       exp, alt = sym.to_s.split(/\//).map { |s| s.to_sym }
       exp = Modesty.experiments[exp]
-      yield if exp.choose == alt
+      yield if exp.ab_test? alt
     end
   end
 
