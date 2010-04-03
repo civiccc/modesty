@@ -1,5 +1,7 @@
 class Symbol
-  def /(other)
-    :"#{self}/#{other}"
+  unless method_defined? :/
+    def /(other)
+      :"#{self}/#{other}"
+    end
   end
 end
