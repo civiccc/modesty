@@ -13,6 +13,10 @@ module Modesty
       def initialize(exp)
         @exp = exp
       end
+
+      def metrics(*args)
+        @exp.instance_variable_set("@metrics", args.map { |s| Modesty.metrics[s] })
+      end
     end
 
     def initialize(slug)
@@ -22,10 +26,14 @@ module Modesty
     ATTRIBUTES = [
       :description,
       :alternatives,
-      :metrics,
     ]
+
     attr_reader *ATTRIBUTES 
     attr_reader :slug
+
+    def choose #TODO: real identification
+      @alternatives[rand(@alternatives.count)]
+    end
   end
 
   module ExperimentMethods
@@ -35,16 +43,28 @@ module Modesty
       @experiments[exp.slug] = exp
     end
 
+    # For tracking metrics in an experiment, use:
+    # Modesty.track! :metric/:experiment/:alternative
     def new_experiment(slug, &block)
       exp = Experiment.new(slug)
       yield Experiment::Builder.new(exp) if block
       exp.alternatives.each do |a|
         exp.metrics.each do |m|
-          Modesty.new_metric(m.slug/a.slug, m)
+          Modesty.new_metric(m.slug/exp.slug/a, m)
         end
       end
       add_experiment(exp)
       exp
+    end
+
+    # Usage:
+    # >> ab_test :experiment/:alternative do
+    # >>   #something
+    # >> end
+    def ab_test(sym, &blk)
+      exp, alt = sym.to_s.split(/\//).map { |s| s.to_sym }
+      exp = Modesty.experiments[exp]
+      yield if exp.choose == alt
     end
   end
 
