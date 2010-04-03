@@ -61,8 +61,9 @@ module Modesty
     # >> m.slug
     # => :baz
     def add_metric(metric)
-      @metrics ||= []
-      @metrics << metric
+      @metrics ||= {}
+      raise "Metric already defined!" if @metrics[metric.slug]
+      @metrics[metric.slug] = metric
     end
 
     def new_metric(slug, parent=nil, &block)
