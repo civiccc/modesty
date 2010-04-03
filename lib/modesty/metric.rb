@@ -39,6 +39,10 @@ module Modesty
       "modesty:metrics:#{@slug.to_s.gsub(/\//,':')}"
     end
 
+    def total
+      Modesty.redis[self.redis_key]
+    end
+
     def track!(count = 1)
       Modesty.redis.incrby(self.redis_key, count)
       @parent.track!(count) if @parent
@@ -47,8 +51,7 @@ module Modesty
 
   class NoMetricError < NameError; end
 
-  class << self
-
+  module MetricMethods
     attr_accessor :metrics
 
     #doctest: tools for adding new metrics
@@ -81,5 +84,18 @@ module Modesty
     def redis
       @redis ||= self::MockRedis.new
     end
+
+    #Tracking
+    def track!(sym, count=1)
+      if @metrics.include? sym
+        @metrics[sym].track! count
+      else
+        raise NoMetricError
+      end
+    end
+  end
+
+  class << self
+    include MetricMethods
   end
 end
