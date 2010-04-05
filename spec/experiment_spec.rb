@@ -22,6 +22,9 @@ describe Modesty::Experiment, "creating an experiment" do
       m.metrics :foo/:bar, :baz
     end 
 
+    Modesty.experiments.should include :creation_page
+    Modesty.experiments[:creation_page].should == e
+
     e.metrics.should include Modesty.metrics[:foo/:bar]
     e.metrics.should include Modesty.metrics[:baz]
     e.alternatives.should == [:heavyweight, :middleweight, :lightweight]
