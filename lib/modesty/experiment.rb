@@ -38,6 +38,8 @@ module Modesty
   end
 
   module ExperimentMethods
+    attr_reader :experiments
+
     def add_experiment(exp)
       @experiments ||= {}
       raise "Experiment already defined!" if @experiments[exp.slug]

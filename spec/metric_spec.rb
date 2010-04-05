@@ -105,3 +105,32 @@ describe Modesty::Metric, "Tracking Metrics" do
     lambda { Modesty.track! :oh_noes }.should raise_error Modesty::NoMetricError
   end
 end
+
+describe Modesty::Metric, "Tracking hooks" do
+  it "can set a hook" do
+    lambda do
+      Modesty.hook do |m, count|
+        raise "LOL"
+      end
+    end.should_not raise_error
+  end
+
+  it "can run hooks" do
+    lambda do
+      Modesty.track! :foo
+    end.should raise_error "LOL"
+    Modesty.instance_variable_set("@hooks",[])
+  end
+
+  it "can set a hook on a metric" do
+    Modesty.metrics[:foo].hook do |count|
+      raise count
+    end
+  end
+
+  it "can call a hook on a metric" do
+    lambda do
+      Modesty.track! :foo, 100
+    end.should raise_error "100"
+  end
+end

@@ -17,6 +17,12 @@ module Modesty
       def submetric(slug, &blk)
         Modesty.new_metric(@metric.slug/slug, @metric, &blk)
       end
+
+      def hook(&blk)
+        Modesty.hook do |metric, count|
+          blk.call(count) if metric == @metric
+        end
+      end
     end
 
     ATTRIBUTES = [
@@ -85,10 +91,23 @@ module Modesty
       @redis ||= self::MockRedis.new
     end
 
+    #Hooks
+    def hook(&block)
+      (@hooks ||= []) << block
+    end
+
+    def run_hooks(metric, count)
+      @hooks ||= []
+      @hooks.each do |hook|
+        hook.call(metric,count)
+      end
+    end
+
     #Tracking
     def track!(sym, count=1)
       if @metrics.include? sym
         @metrics[sym].track! count
+        self.run_hooks(@metrics[sym], count)
       else
         raise NoMetricError
       end
