@@ -1,0 +1,8 @@
+datastore:
+  type: redis
+  port: 6379
+  host: localhost
+
+paths:
+  experiments: experiments
+  metrics: metrics
