@@ -51,10 +51,11 @@ end
 
 describe Modesty::Metric, "Tracking Metrics" do
   before :each do
-    Modesty.redis.flushdb
+    Modesty.data.flushdb
   end
 
   before :all do
+    Modesty.set_store :mock
     Modesty.metrics = {}
     Modesty.new_metric :foo do |foo|
       foo.description "Foo"
@@ -67,37 +68,38 @@ describe Modesty::Metric, "Tracking Metrics" do
         end
       end
     end
+    Modesty.data.flushdb
   end
 
   it "can track a metric" do
     (1..100).each do |i|
       lambda { Modesty.track! :foo }.should_not raise_error
-      Modesty.metrics[:foo].total.to_i.should == i
+      Modesty.metrics[:foo].values.to_i.should == i
     end
   end
 
   it "can track a metric with a count" do
     (1..100).each do |i|
       lambda { Modesty.track! :foo, 3 }.should_not raise_error
-      Modesty.metrics[:foo].total.to_i.should == i*3
+      Modesty.metrics[:foo].values.to_i.should == i*3
     end
   end
 
   it "can track one submetric" do
     (1..100).each do |i|
       lambda { Modesty.track! :foo/:bar }.should_not raise_error
-      Modesty.metrics[:foo].total.to_i.should == i
-      Modesty.metrics[:foo/:bar].total.to_i.should == i
-      Modesty.metrics[:foo/:bar/:baz].total.to_i.should == 0
+      Modesty.metrics[:foo].values.to_i.should == i
+      Modesty.metrics[:foo/:bar].values.to_i.should == i
+      Modesty.metrics[:foo/:bar/:baz].values.to_i.should == 0
     end
   end
 
   it "can track more than one submetric" do
     (1..100).each do |i|
       lambda { Modesty.track! :foo/:bar/:baz }.should_not raise_error
-      Modesty.metrics[:foo].total.to_i.should == i
-      Modesty.metrics[:foo/:bar].total.to_i.should == i
-      Modesty.metrics[:foo/:bar/:baz].total.to_i.should == i
+      Modesty.metrics[:foo].values.to_i.should == i
+      Modesty.metrics[:foo/:bar].values.to_i.should == i
+      Modesty.metrics[:foo/:bar/:baz].values.to_i.should == i
     end
   end
 
