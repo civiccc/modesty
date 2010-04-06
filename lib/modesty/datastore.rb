@@ -1,13 +1,5 @@
 module Modesty
   module DatastoreMethods
-    attr_writer :config_path
-    def config_path
-      @config_path ||= File.join(
-        Modesty.root,
-        'config/modesty.yml'
-      )
-    end
-
     def set_store(type, opts={})
       @store = case type.to_s
       when 'redis'

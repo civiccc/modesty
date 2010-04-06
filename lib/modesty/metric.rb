@@ -1,6 +1,5 @@
 module Modesty
   class Metric
-
     class Builder
       def method_missing(name, *args)
         if Metric::ATTRIBUTES.include? name
@@ -19,13 +18,30 @@ module Modesty
       end
     end
 
+    class << self
+      attr_writer :dir
+      def dir
+        @dir ||= File.join(
+          Modesty::Experiment.dir,
+          'metrics'
+        )
+      end
+      
+      def load_all!
+        Dir.glob(
+          File.join(self.dir, '**')
+        ).each { |f| load f }
+      end
+    end
+
+
     ATTRIBUTES = [
       :description
     ]
     attr_reader *ATTRIBUTES
     attr_reader :slug
     attr_reader :parent
-    
+
     #doctest: I can make a metric!
     # >> m = Modesty::Metric.new :foo
     # >> m.slug

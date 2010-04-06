@@ -23,6 +23,19 @@ module Modesty
       @slug = slug
     end
 
+    class << self
+      attr_writer :dir
+      def dir
+        @dir ||= File.join(Modesty.root, 'experiments')
+      end
+
+      def load_all!
+        Dir.glob(
+          File.join(self.dir, '*.rb')
+        ).each { |f| load f }
+      end
+    end
+
     ATTRIBUTES = [
       :description,
       :alternatives,
