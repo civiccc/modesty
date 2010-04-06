@@ -40,3 +40,29 @@ describe Modesty::Experiment, "creating an experiment" do
     Modesty.metrics.should include :baz/:creation_page/:lightweight
   end
 end
+
+describe "A/B testing" do
+  before :all do
+    Modesty.identify :default
+    Modesty.set_store :mock
+  end
+
+  it "Selects evenly between alternatives" do
+    (0..(3*8)).each do |i|
+      Modesty.identify! i
+      Modesty.ab_test :creation_page/:lightweight do
+        Modesty.track! :baz/:creation_page/:lightweight
+        Modesty.metrics[:baz/:creation_page/:lightweight].values.should == 1+i/3
+      end
+      Modesty.ab_test :creation_page/:middleweight do
+        Modesty.track! :baz/:creation_page/:middleweight
+        Modesty.metrics[:baz/:creation_page/:middleweight].values.should == 1+i/3
+      end
+      Modesty.ab_test :creation_page/:heavyweight do
+        Modesty.track! :baz/:creation_page/:heavyweight
+        Modesty.metrics[:baz/:creation_page/:heavyweight].values.should == 1+i/3
+      end
+      Modesty.metrics[:baz].values.should == 1+i
+    end
+  end
+end

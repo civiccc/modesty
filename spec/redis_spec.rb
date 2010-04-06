@@ -1,3 +1,5 @@
+require 'modesty'
+
 describe "Real Redis" do
   it "can connect to redis" do
     lambda { Modesty.set_store :redis }.should_not raise_error

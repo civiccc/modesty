@@ -9,6 +9,9 @@ describe "bootstrap" do
           '../test/myapp'
         )
       end
+      def self.after_initialize
+        yield
+      end
     end
   end
 
@@ -24,5 +27,9 @@ describe "bootstrap" do
 
   it "loads metrics" do
     Modesty.metrics.should include :baked_goods
+  end
+
+  it "loads experiments" do
+    Modesty.experiments.should include :cookbook
   end
 end

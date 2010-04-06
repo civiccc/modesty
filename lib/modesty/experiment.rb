@@ -15,7 +15,10 @@ module Modesty
       end
 
       def metrics(*args)
-        @exp.instance_variable_set("@metrics", args.map { |s| Modesty.metrics[s] })
+        metrics = args.map do |s|
+          Modesty.metrics[s] || raise(Modesty::NoMetricError, "Undefined metric '#{s}'")
+        end
+        @exp.instance_variable_set("@metrics", metrics)
       end
     end
 
@@ -55,7 +58,7 @@ module Modesty
   end
 
   module ExperimentMethods
-    attr_reader :experiments
+    attr_accessor :experiments
 
     def add_experiment(exp)
       @experiments ||= {}

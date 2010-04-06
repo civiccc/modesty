@@ -1,3 +1,5 @@
+require 'modesty'
+
 describe Modesty, "Working with identities" do
   before :each do
     @id = rand 10**10

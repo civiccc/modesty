@@ -1,3 +1,5 @@
+require 'modesty'
+
 describe "loading metrics" do
   before :all do
     Modesty.root = File.join(
@@ -34,6 +36,11 @@ describe "loading metrics" do
 end
 
 describe "Loading experiments" do
+  before :all do
+    Modesty::Metric.load_all!
+    Modesty.experiments = {}
+  end
+
   it "can load experiments" do
     lambda do
       Modesty::Experiment.load_all!
@@ -41,5 +48,11 @@ describe "Loading experiments" do
   end
 
   it "actually loads experiments" do
+    Modesty.experiments.should include :cookbook
+  end
+
+  after :all do
+    Modesty.metrics = {}
+    Modesty.experiments = {}
   end
 end
