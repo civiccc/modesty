@@ -74,6 +74,14 @@ module Modesty
       end
     end
 
+    def srem(key, value)
+      case set = @@hash[key]
+      when nil ; return
+      when Set ; set.delete value
+      else fail "Not a set"
+      end
+    end
+
     def scard(key)
       case set = @@hash[key]
       when nil ; 0
