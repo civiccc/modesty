@@ -48,12 +48,22 @@ module Modesty
     attr_reader :slug
     attr_reader :metrics
 
-    def ab_test
-      raise Modesty::IdentityError "Try calling Modesty.identify! first." unless Modesty.identity
-      @alternatives[Modesty.identity % @alternatives.count]
+    def chooses(alt)
+      self.register! alt
     end
 
-    def ab_test? alt
+    def ab_test
+      raise Modesty::IdentityError, "Try calling Modesty.identify! first." unless Modesty.identity
+      self.get_cached_alternative || self.generate_alternative
+    end
+
+    def generate_alternative
+      self.register! @alternatives[ 
+        "#{@slug}#{Modesty.identity}".hash % @alternatives.count
+      ]
+    end
+
+    def ab_test?(alt)
       self.ab_test == alt
     end
   end

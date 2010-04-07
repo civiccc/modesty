@@ -39,11 +39,24 @@ module Modesty
       ] + args.map { |a| a.to_s }).join(':')
     end
 
-    def register!
-      Modesty.data.sadd(
-        self.key(self.ab_test),
-        Modesty.identity
-      )
+    def register!(alt=nil)
+      alt ||= self.ab_test
+      old_alt = self.get_cached_alternative
+      if old_alt
+        Modesty.data.srem(self.key(old_alt), Modesty.identity)
+      end
+      Modesty.data.sadd(self.key(alt), Modesty.identity)
+      return alt
+    end
+
+    def get_cached_alternative(identity=nil)
+      identity ||= Modesty.identity
+      self.alternatives.each do |alt|
+        if Modesty.data.sismember(self.key(alt), identity)
+          return alt
+        end
+      end
+      return nil
     end
 
     def users(alt=nil)
