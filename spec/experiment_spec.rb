@@ -48,7 +48,7 @@ describe "A/B testing" do
   end
 
   it "Selects evenly between alternatives" do
-    (0..(3*8)).each do |i|
+    (0..(3*8-1)).each do |i|
       Modesty.identify! i
       Modesty.ab_test :creation_page/:lightweight do
         Modesty.track! :baz/:creation_page/:lightweight
@@ -64,5 +64,13 @@ describe "A/B testing" do
       end
       Modesty.metrics[:baz].values.should == 1+i
     end
+  end
+
+  it "tracks the number of users in each experimental group" do
+    e = Modesty.experiments[:creation_page]
+    e.users.should == 3*8
+    e.users(:lightweight).should == 8
+    e.users(:middleweight).should == 8
+    e.users(:heavyweight).should == 8
   end
 end

@@ -49,6 +49,7 @@ module Modesty
     attr_reader :metrics
 
     def ab_test
+      raise Modesty::IdentityError "Try calling Modesty.identify! first." unless Modesty.identity
       @alternatives[Modesty.identity % @alternatives.count]
     end
 
@@ -87,6 +88,7 @@ module Modesty
     def ab_test(sym, &blk)
       exp, alt = sym.to_s.split(/\//).map { |s| s.to_sym }
       exp = Modesty.experiments[exp]
+      exp.register!
       yield if exp.ab_test? alt
     end
   end

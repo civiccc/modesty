@@ -1,5 +1,7 @@
 module Modesty
   #TODO: cookies n stuff
+  
+  class IdentityError < RuntimeError; end
 
   module IdentityMethods
     attr_reader :identity

@@ -30,4 +30,31 @@ module Modesty
       Modesty.data.incrby(self.key(Date.today, 'count'), count)
     end
   end
+
+  class Experiment
+    def key(*args)
+      ([
+        'modesty:experiments',
+        @slug.to_s.gsub(/\//,':')
+      ] + args.map { |a| a.to_s }).join(':')
+    end
+
+    def register!
+      Modesty.data.sadd(
+        self.key(self.ab_test),
+        Modesty.identity
+      )
+    end
+
+    def users(alt=nil)
+      if alt.nil? #return the sum
+        self.alternatives.map do |alt|
+          Modesty.data.scard(self.key(alt)).to_i
+        end.inject(0){|s,i|s+i}
+      else
+        Modesty.data.scard(self.key(alt)).to_i
+      end
+    end
+
+  end
 end
