@@ -1,4 +1,5 @@
 # from assaf's Vanity; http://github.com/assaf/vanity
+require 'set'
 
 module Modesty
   # The Redis you should never use in production.
