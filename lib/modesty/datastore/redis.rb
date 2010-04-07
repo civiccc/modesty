@@ -3,4 +3,7 @@ require File.join(
   '../vendor/redis-rb/lib/redis.rb'
 )
 
-require 'modesty/datastore/key_value_metric_methods'
+require File.join(
+  File.dirname(__FILE__),
+  'key_value_methods'
+)

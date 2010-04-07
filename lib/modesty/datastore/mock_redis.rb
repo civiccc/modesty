@@ -86,5 +86,5 @@ end
 
 require File.join(
   File.dirname(__FILE__),
-  'key_value_metric_methods'
+  'key_value_methods'
 )
