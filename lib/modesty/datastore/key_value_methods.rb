@@ -70,4 +70,21 @@ module Modesty
     end
 
   end
+
+  class ConnectionError < StandardError; end
+
+  class << self
+    def ping!
+      self.data.ping
+    rescue Errno::ECONNREFUSED
+      raise self::ConnectionError
+    end
+
+    def connected?
+      self.ping!
+      true
+    rescue
+      false
+    end
+  end
 end

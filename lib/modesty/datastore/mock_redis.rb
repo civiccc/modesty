@@ -89,6 +89,10 @@ module Modesty
       else fail "Not a set"
       end
     end
+
+    def ping
+      "PONG"
+    end
   end
 end
 
