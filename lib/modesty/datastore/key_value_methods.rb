@@ -23,11 +23,15 @@ module Modesty
         keys = (start.to_date..fin.to_date).map { |d| self.key(d, 'count') }
         return Modesty.data.mget(keys).map { |s| s.to_i }
       end
+    rescue Errno::ECONNREFUSED
+      raise Modesty::ConnectionError
     end
 
     def track!(count = 1)
       @parent.track!(count) if @parent
       Modesty.data.incrby(self.key(Date.today, 'count'), count)
+    rescue Errno::ECONNREFUSED
+      raise Modesty::ConnectionError
     end
   end
 
@@ -47,6 +51,8 @@ module Modesty
       end
       Modesty.data.sadd(self.key(alt), Modesty.identity)
       return alt
+    rescue Errno::ECONNREFUSED
+      raise self::ConnectionError
     end
 
     def get_cached_alternative(identity=nil)
@@ -57,6 +63,8 @@ module Modesty
         end
       end
       return nil
+    rescue Errno::ECONNREFUSED
+      raise self::ConnectionError
     end
 
     def users(alt=nil)
@@ -67,6 +75,8 @@ module Modesty
       else
         Modesty.data.scard(self.key(alt)).to_i
       end
+    rescue Errno::ECONNREFUSED
+      raise self::ConnectionError
     end
 
   end
