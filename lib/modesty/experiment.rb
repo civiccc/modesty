@@ -91,15 +91,40 @@ module Modesty
       exp
     end
 
+    def get_experiment(sym)
+      exp = Modesty.experiments[sym]
+      exp.register!
+      exp
+    end
+
     # Usage:
-    # >> ab_test :experiment/:alternative do
+    # >> Modesty.ab_test :experiment/:alternative do
     # >>   #something
     # >> end
-    def ab_test(sym, &blk)
+    # Or:
+    # >> ab_test :experiment
+    # => :current_alternative
+    def ab_test(sym)
+      if sym.to_s['/']
+        exp, alt = sym.to_s.split(/\//).map { |s| s.to_sym }
+        exp = self.get_experiment(exp)
+        yield if block_given? && exp.ab_test?(alt)
+      else
+        exp = self.get_experiment(sym)
+        exp.ab_test
+      end
+    end
+
+    # Usage:
+    # if Modesty.ab_test? :experiment/:alternative
+    #   #something
+    # else
+    #   #something else
+    # end
+    def ab_test?(sym)
       exp, alt = sym.to_s.split(/\//).map { |s| s.to_sym }
-      exp = Modesty.experiments[exp]
-      exp.register!
-      yield if exp.ab_test? alt
+      exp = self.get_experiment(exp)
+      exp.ab_test? sym
     end
   end
 

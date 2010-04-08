@@ -91,7 +91,7 @@ describe "A/B testing" do
   it "allows for manually setting your experiment group" do
     Modesty.identify! 50
     e = Modesty.experiments[:creation_page]
-    3.times do
+    2.times do
       e.alternatives.each do |alt|
         e.chooses alt
         e.ab_test.should == alt
