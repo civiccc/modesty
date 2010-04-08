@@ -13,6 +13,7 @@ module Modesty
         self.set_store 'mock'
       end
     end
+    alias data= set_store
 
     def data
       @store ||= set_store 'mock'
