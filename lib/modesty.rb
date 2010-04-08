@@ -1,5 +1,7 @@
 require 'yaml'
 
+$:.unshift File.dirname(__FILE__)
+
 module Modesty
   ROOT = File.dirname(__FILE__)
   class << self
