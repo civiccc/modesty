@@ -1,4 +1,4 @@
 Modesty.root = Rails.root
-Rails.after_initialize do
+Rails.configuration.after_initialize do
   Modesty.load!
 end
