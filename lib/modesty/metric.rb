@@ -67,10 +67,6 @@ module Modesty
     attr_reader :slug
     attr_reader :parent
 
-    #doctest: I can make a metric!
-    # >> m = Modesty::Metric.new :foo
-    # >> m.slug
-    # => :foo
     def initialize(slug, parent=nil)
       @slug = slug
       @parent = parent
@@ -107,19 +103,6 @@ module Modesty
   module MetricMethods
     attr_accessor :metrics
 
-    #doctest: tools for adding new metrics
-    # >> m = Modesty.new_metric(:foo) { |m| m.description "Foo" }
-    # >> m.class
-    # => Modesty::Metric
-    # >> m.description
-    # => "Foo"
-    # >> Modesty.metrics.include? m
-    # => true
-    #
-    #doctest: I can even call it without a block!
-    # >> m = Modesty.new_metric :baz
-    # >> m.slug
-    # => :baz
     def add_metric(metric)
       @metrics ||= {}
       raise "Metric already defined!" if @metrics[metric.slug]
