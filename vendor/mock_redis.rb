@@ -66,6 +66,14 @@ module Modesty
       end
     end
 
+    def smembers(key)
+      case set = @@hash[key]
+      when nil ; []
+      when Set ; set.to_a
+      else fail "Not a set"
+      end
+    end
+
     def sadd(key, value)
       case set = @@hash[key]
       when nil ; @@hash[key] = Set.new([value])
@@ -95,8 +103,3 @@ module Modesty
     end
   end
 end
-
-require File.join(
-  File.dirname(__FILE__),
-  'key_value_methods'
-)

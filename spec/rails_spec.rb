@@ -2,15 +2,22 @@ require 'modesty'
 
 describe "bootstrap" do
   before :all do
-    class Rails
-      def self.root
-        File.join(
-          File.expand_path(File.dirname(__FILE__)),
-          '../test/myapp'
-        )
-      end
-      def self.after_initialize
-        yield
+    unless defined? Rails
+      class Rails
+        def self.root
+          File.join(
+            File.expand_path(File.dirname(__FILE__)),
+            '../test/myapp'
+          )
+        end
+
+        def self.configuration
+          self
+        end
+
+        def self.after_initialize
+          yield
+        end
       end
     end
   end
@@ -20,9 +27,9 @@ describe "bootstrap" do
   end
 
   it "bootstraps Redis" do
-    Modesty.data.class.name.should == 'Redis'
-    Modesty.data.instance_variable_get("@port").should == 6379
-    Modesty.data.instance_variable_get("@host").should == 'localhost'
+    Modesty.data.store.class.name.should == 'Redis'
+    Modesty.data.store.instance_variable_get("@port").should == 6379
+    Modesty.data.store.instance_variable_get("@host").should == 'localhost'
   end
 
   it "loads metrics" do

@@ -32,8 +32,33 @@ module Modesty
           File.join(self.dir, '**')
         ).each { |f| load f }
       end
-    end
 
+      private
+      def data_type(name)
+        name_range = (name.to_s + '_range').to_sym
+        define_method(name) do |*args|
+          start, fin = args
+          range = nil
+          if start.is_a? Range
+            range = start
+          elsif !fin.nil?
+            range = parse_date(start)..parse_date(fin)
+          end
+
+          if range
+            begin
+              self.data.send(name_range, range)
+            rescue NoMethodError
+              range.map do |date|
+                self.data.send(name, date)
+              end
+            end
+          else
+            self.data.send(name, parse_date(start))
+          end
+        end
+      end
+    end
 
     ATTRIBUTES = [
       :description
@@ -49,6 +74,30 @@ module Modesty
     def initialize(slug, parent=nil)
       @slug = slug
       @parent = parent
+    end
+
+    def data
+      @data ||= (Modesty.data.class)::MetricData.new(self)
+    end
+
+    def parse_date(date)
+      if date.is_a? Symbol
+        Date.send(start)
+      elsif date.nil?
+        Date.today
+      else
+        date.to_date
+      end
+    end
+
+    data_type :count
+    data_type :users
+    data_type :users_count
+    data_type :unidentified_users
+
+    def track!(count=1)
+      @parent.track!(count) if @parent
+      self.data.track!(count)
     end
 
   end

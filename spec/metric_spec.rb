@@ -55,7 +55,7 @@ describe Modesty::Metric, "Tracking Metrics" do
   end
 
   before :all do
-    Modesty.set_store :mock
+    Modesty.set_store :redis, :mock => true
     Modesty.metrics = {}
     Modesty.new_metric :foo do |foo|
       foo.description "Foo"
@@ -74,32 +74,32 @@ describe Modesty::Metric, "Tracking Metrics" do
   it "can track a metric" do
     (1..100).each do |i|
       lambda { Modesty.track! :foo }.should_not raise_error
-      Modesty.metrics[:foo].values.to_i.should == i
+      Modesty.metrics[:foo].count.to_i.should == i
     end
   end
 
   it "can track a metric with a count" do
     (1..100).each do |i|
       lambda { Modesty.track! :foo, 3 }.should_not raise_error
-      Modesty.metrics[:foo].values.to_i.should == i*3
+      Modesty.metrics[:foo].count.to_i.should == i*3
     end
   end
 
   it "can track one submetric" do
     (1..100).each do |i|
       lambda { Modesty.track! :foo/:bar }.should_not raise_error
-      Modesty.metrics[:foo].values.to_i.should == i
-      Modesty.metrics[:foo/:bar].values.to_i.should == i
-      Modesty.metrics[:foo/:bar/:baz].values.to_i.should == 0
+      Modesty.metrics[:foo].count.to_i.should == i
+      Modesty.metrics[:foo/:bar].count.to_i.should == i
+      Modesty.metrics[:foo/:bar/:baz].count.to_i.should == 0
     end
   end
 
   it "can track more than one submetric" do
     (1..100).each do |i|
       lambda { Modesty.track! :foo/:bar/:baz }.should_not raise_error
-      Modesty.metrics[:foo].values.to_i.should == i
-      Modesty.metrics[:foo/:bar].values.to_i.should == i
-      Modesty.metrics[:foo/:bar/:baz].values.to_i.should == i
+      Modesty.metrics[:foo].count.to_i.should == i
+      Modesty.metrics[:foo/:bar].count.to_i.should == i
+      Modesty.metrics[:foo/:bar/:baz].count.to_i.should == i
     end
   end
 

@@ -44,7 +44,7 @@ end
 describe "A/B testing" do
   before :all do
     Modesty.identify :default
-    Modesty.set_store :mock
+    Modesty.set_store :redis, :mock => true
   end
 
   it "Selects evenly between alternatives" do
@@ -53,22 +53,32 @@ describe "A/B testing" do
       [:lightweight, :middleweight, :heavyweight].each do |alt|
         Modesty.ab_test :creation_page/alt do
           Modesty.track! :baz/:creation_page/alt
-          Modesty.metrics[:baz/:creation_page/alt].values.should be_close i/3, 2+i/6
+          Modesty.metrics[:baz/:creation_page/alt].count.should be_close i/3, 2+i/6
         end
       end
-      Modesty.metrics[:baz].values.should == 1+i
+      Modesty.metrics[:baz].count.should == 1+i
+    end
+  end
+
+  it "tracks the users in each experimental group" do
+    e = Modesty.experiments[:creation_page]
+    lambda { e.users }.should_not raise_error
+    u = e.users
+    u.should be_a Array
+    (1..(3*100-1)).each do |i|
+      u.should include i
     end
   end
 
   it "tracks the number of users in each experimental group" do
     e = Modesty.experiments[:creation_page]
-    e.users.should == 3*100
+    e.num_users.should == 3*100
     [:lightweight, :middleweight, :heavyweight].each do |alt|
-      e.users(alt).should be_close 3*100/4, 2 + 3*100/6
+      e.num_users(alt).should be_close 3*100/4, 2 + 3*100/6
     end
   end
 
-  it "uses cached values" do
+  it "uses cached alternative" do
     class Modesty::Experiment
       alias old_generate generate_alternative
       def generate_alternative

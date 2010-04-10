@@ -48,17 +48,35 @@ module Modesty
     attr_reader :slug
     attr_reader :metrics
 
+    def data
+      @data ||= (Modesty.data.class)::ExperimentData.new(self)
+    end
+
     def chooses(alt)
-      self.register! alt
+      self.data.register! alt
+    end
+
+    def register!
+      self.data.register!
+    end
+
+    def users(alt=nil)
+      self.data.users(alt)
+    end
+
+    def num_users(alt=nil)
+      self.data.num_users(alt)
+    rescue NoMethodError
+      self.users(alt).count
     end
 
     def ab_test
       raise Modesty::IdentityError, "Try calling Modesty.identify! first." unless Modesty.identity
-      self.get_cached_alternative || self.generate_alternative
+      self.data.get_cached_alternative || self.generate_alternative
     end
 
     def generate_alternative
-      self.register! @alternatives[ 
+      self.data.register! @alternatives[ 
         "#{@slug}#{Modesty.identity}".hash % @alternatives.count
       ]
     end
