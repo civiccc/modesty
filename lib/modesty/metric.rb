@@ -29,7 +29,7 @@ module Modesty
       
       def load_all!
         Dir.glob(
-          File.join(self.dir, '**')
+          File.join(self.dir, '*.rb')
         ).each { |f| load f }
       end
 
@@ -98,6 +98,10 @@ module Modesty
     def track!(count=1)
       @parent.track!(count) if @parent
       self.data.track!(count)
+    end
+
+    def /(sym)
+      Modesty.metrics[@slug/sym] || (raise NoMetricError)
     end
 
   end

@@ -20,6 +20,10 @@ module Modesty
         end
         @exp.instance_variable_set("@metrics", metrics)
       end
+
+      def stat(name, &blk)
+        @exp.stats[name] = Stat.new(blk)
+      end
     end
 
     def initialize(slug)
@@ -68,6 +72,10 @@ module Modesty
       self.data.num_users(alt)
     rescue NoMethodError
       self.users(alt).count
+    end
+
+    def stats
+      @stats ||= []
     end
 
     def ab_test
