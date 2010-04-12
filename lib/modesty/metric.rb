@@ -67,6 +67,12 @@ module Modesty
     attr_reader :slug
     attr_reader :parent
 
+    # metrics should know what experiments use them,
+    # to enable smart tracking.
+    def experiments
+      @experiments ||= []
+    end
+
     def initialize(slug, parent=nil)
       @slug = slug
       @parent = parent
@@ -94,8 +100,18 @@ module Modesty
     def track!(count=1)
       @parent.track!(count) if @parent
       self.data.track!(count)
+
+      self.experiments.each do |exp|
+        if Modesty.identity
+          alt = exp.ab_test
+          (self/(exp.slug/alt)).data.track!
+        end
+      end
     end
 
+    def /(sym)
+      Modesty.metrics[@slug/sym] || (raise NoMetricError, "Undefined metric :'#{@slug/sym}'")
+    end
   end
 
   class NoMetricError < NameError; end

@@ -100,8 +100,9 @@ module Modesty
     def new_experiment(slug, &block)
       exp = Experiment.new(slug)
       yield Experiment::Builder.new(exp) if block
-      exp.alternatives.each do |a|
-        exp.metrics.each do |m|
+      exp.metrics.each do |m|
+        m.experiments << exp
+        exp.alternatives.each do |a|
           Modesty.new_metric(m.slug/exp.slug/a, m)
         end
       end

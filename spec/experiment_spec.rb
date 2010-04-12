@@ -52,7 +52,7 @@ describe "A/B testing" do
       Modesty.identify! i
       [:lightweight, :middleweight, :heavyweight].each do |alt|
         Modesty.ab_test :creation_page/alt do
-          Modesty.track! :baz/:creation_page/alt
+          Modesty.track! :baz
           Modesty.metrics[:baz/:creation_page/alt].count.should be_close i/3, 2+i/6
         end
       end
