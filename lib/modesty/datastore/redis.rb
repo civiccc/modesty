@@ -5,6 +5,10 @@ require File.join(
 
 module Modesty
   class RedisData < Datastore
+    def self.date_key(date)
+      "%04d-%02d-%02d" % [date.year, date.month, date.day]
+    end
+
     def initialize(options={})
       if options['mock'] || options[:mock]
         require File.join(
@@ -30,7 +34,9 @@ module Modesty
     end
 
     def self.keyify(*args)
-      (['modesty']+args.map {|a| a.to_s}).join(':')
+      args.map {|a| a.to_s}.map do |a|
+        (a.is_a?(Date)) ? date_key(a) : a
+      end.gsub(/[^\w\-]/,'_').unshift('modesty').join(':')
     end
 
     class MetricData < Datastore::MetricData

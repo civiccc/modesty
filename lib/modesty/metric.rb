@@ -77,7 +77,7 @@ module Modesty
 
     def parse_date(date)
       if date.is_a? Symbol
-        Date.send(start)
+        Date.send(date)
       elsif date.nil?
         Date.today
       else

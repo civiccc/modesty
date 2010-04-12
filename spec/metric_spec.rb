@@ -125,5 +125,8 @@ describe Modesty::Metric, "Tracking Metrics" do
     end.should_not raise_error
     Modesty.metrics[:foo/:bar].unique(:zings).should == 2
     Modesty.metrics[:foo/:bar].all(:zings).count.should == 2
+
+    Modesty.metrics[:foo/:bar].unique(:zings, :yesterday).should == 0
+    Modesty.metrics[:foo/:bar].unique(:zings, :all).should == 2
   end
 end
