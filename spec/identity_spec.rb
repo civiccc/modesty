@@ -40,4 +40,8 @@ describe Modesty, "Working with identities" do
     Modesty.identify! @id, 5, 6, 7, 8, 9
     Modesty.identity.should == @id + 9
   end
+
+  after :all do
+    Modesty.instance_variable_set("@identity", nil)
+  end
 end

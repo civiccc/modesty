@@ -1,4 +1,6 @@
 require 'yaml'
+require 'rubygems'
+require 'active_support/inflector'
 
 $:.unshift File.dirname(__FILE__)
 

@@ -106,4 +106,24 @@ describe Modesty::Metric, "Tracking Metrics" do
   it "raises Modesty::NoMetricError if it can't find your metric" do
     lambda { Modesty.track! :oh_noes }.should raise_error Modesty::NoMetricError
   end
+
+  it "can track with custom data" do
+    lambda do
+      Modesty.track! :foo/:bar, :with => {:zing => 56}
+    end.should_not raise_error
+    Modesty.metrics[:foo/:bar].unique(:zings).should == 1
+    Modesty.metrics[:foo/:bar].all(:zings).should include 56
+
+    lambda do
+      Modesty.track! :foo/:bar, :with => {:zing => 97}, :count => 4
+    end.should_not raise_error
+    Modesty.metrics[:foo/:bar].unique(:zings).should == 2
+    Modesty.metrics[:foo/:bar].all(:zings).should include 97
+
+    lambda do
+      Modesty.track! :foo/:bar, 7, :with => {:zing => 97}
+    end.should_not raise_error
+    Modesty.metrics[:foo/:bar].unique(:zings).should == 2
+    Modesty.metrics[:foo/:bar].all(:zings).count.should == 2
+  end
 end

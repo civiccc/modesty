@@ -42,8 +42,8 @@ module Modesty
         Modesty.data
       end
 
-      def ids_key(*args)
-        RedisData.keyify('metric_ids', @metric.slug, *args)
+      def with_key(param, *args)
+        RedisData.keyify(:metric_with, param, @metric.slug, *args)
       end
 
       def count(date)
@@ -55,27 +55,33 @@ module Modesty
         data.mget(keys).map { |s| s.to_i }
       end
 
-      def users(date)
-        data.scard(ids_key(date))
-      end
-
       def unidentified_users(date)
-        data.get(ids_key(date), 'unidentified')
+        data.get(with_key(:users, date, :unidentified))
       end
 
       def unidentified_users_range(range)
-        keys = range.map { |d| ids_key(d, 'unidentified') }
+        keys = range.map { |d| with_key(:users, d, :unidentified) }
         data.mget(keys)
       end
 
-      def track!(count=1)
+      def unique(param, date)
+        data.scard(with_key(param, date))
+      end
+
+      def all(param, date)
+        data.smembers(with_key(param, date))
+      end
+
+      def track!(count, with)
         data.incrby(self.key(Date.today, 'count'), count)
-        if Modesty.identity && Modesty.identity > 0
-          data.sadd(
-            ids_key(Date.today), Modesty.identity
-          )
-        else
-          data.incr(ids_key(Date.today, 'unidentified'))
+
+        if !with[:users]
+          data.incr(with_key(:users, Date.today, 'unidentified'))
+        end
+
+        with.each do |param, id|
+          data.sadd(with_key(param, Date.today), id)
+          data.sadd(with_key(param, :all), id)
         end
       end
     end

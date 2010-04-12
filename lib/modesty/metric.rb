@@ -37,24 +37,17 @@ module Modesty
       def data_type(name)
         name_range = (name.to_s + '_range').to_sym
         define_method(name) do |*args|
-          start, fin = args
-          range = nil
-          if start.is_a? Range
-            range = start
-          elsif !fin.nil?
-            range = parse_date(start)..parse_date(fin)
-          end
-
-          if range
+          date_or_range = parse_date_or_range(*args[0..1])
+          if date_or_range.is_a? Range
             begin
-              self.data.send(name_range, range)
+              self.data.send(name_range, date_or_range)
             rescue NoMethodError
-              range.map do |date|
+              date_or_range.map do |date|
                 self.data.send(name, date)
               end
             end
-          else
-            self.data.send(name, parse_date(start))
+          elsif date_or_range.is_a? Date
+            self.data.send(name, date_or_range)
           end
         end
       end
@@ -92,21 +85,63 @@ module Modesty
       end
     end
 
+    def parse_date_or_range(start=nil,fin=nil)
+      if fin.nil?
+        parse_date(start)
+      else
+        parse_date(start)..parse_date(fin)
+      end
+    end
+
     data_type :count
-    data_type :users
-    data_type :users_count
     data_type :unidentified_users
 
-    def track!(count=1)
-      @parent.track!(count) if @parent
-      self.data.track!(count)
+    def get_by(all_or_unique, sym, start=nil, fin=nil)
+      sym = sym.to_sym
+      by_range = :"#{all_or_unique}_by_range"
+      date_or_range = (start.nil?) ? :all : parse_date_or_range(start, fin)
+      if date_or_range.is_a? Range
+        begin
+          return self.data.send(by_range, sym, date_or_range)
+        rescue NoMethodError
+          return date_or_range.map do |date|
+            self.data.send(all_or_unique, sym, date)
+          end
+        end
+      else
+        return self.data.send(all_or_unique, sym, date_or_range)
+      end
+    end
 
-      self.experiments.each do |exp|
-        if Modesty.identity
+    def all(*args)
+      self.get_by(:all, *args)
+    end
+
+    def unique(*args)
+      self.get_by(:unique, *args)
+    end
+
+    def track!(count=1, options={})
+      if count.is_a? Hash
+        options = count
+        count = options[:count] || 1
+      end
+
+      with = options[:with] || {}
+      with = Hash[with.map do |k,v|
+        [k.to_s.pluralize.to_sym, v]
+      end]
+
+      if Modesty.identity
+        with[:users] ||= Modesty.identity
+        self.experiments.each do |exp|
           alt = exp.ab_test
-          (self/(exp.slug/alt)).data.track!
+          (self/(exp.slug/alt)).data.track!(count, with)
         end
       end
+
+      self.data.track!(count, with)
+      @parent.track!(count, with) if @parent
     end
 
     def /(sym)
@@ -133,11 +168,11 @@ module Modesty
     end
 
     #Tracking
-    def track!(sym, count=1)
+    def track!(sym, *args)
       if @metrics.include? sym
-        @metrics[sym].track! count
+        @metrics[sym].track! *args
       else
-        raise NoMetricError
+        raise NoMetricError, "Unrecognized metric #{sym.inspect}"
       end
     end
   end
