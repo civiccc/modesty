@@ -60,6 +60,7 @@ require 'modesty/datastore'
 require 'modesty/identity'
 require 'modesty/metric'
 require 'modesty/experiment'
+require 'modesty/experiment/stat'
 
 if defined? Rails
   require 'modesty/frameworks/rails'

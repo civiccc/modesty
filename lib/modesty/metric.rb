@@ -13,6 +13,10 @@ module Modesty
         @metric = metric
       end
 
+      def inspect
+        "#<#{self.class.name} @slug=#{@slug}>"
+      end
+
       def submetric(slug, &blk)
         Modesty.new_metric(@metric.slug/slug, @metric, &blk)
       end
@@ -109,7 +113,10 @@ module Modesty
   class NoMetricError < NameError; end
 
   module MetricMethods
-    attr_accessor :metrics
+    attr_writer :metrics
+    def metrics
+      @metrics ||= {}
+    end
 
     #doctest: tools for adding new metrics
     # >> m = Modesty.new_metric(:foo) { |m| m.description "Foo" }

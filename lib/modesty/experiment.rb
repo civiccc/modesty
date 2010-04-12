@@ -22,7 +22,7 @@ module Modesty
       end
 
       def stat(name, &blk)
-        @exp.stats[name] = Stat.new(blk)
+        @exp.stats[name] = Stat.new(self,blk)
       end
     end
 
@@ -50,7 +50,10 @@ module Modesty
 
     attr_reader *ATTRIBUTES 
     attr_reader :slug
-    attr_reader :metrics
+
+    def metrics
+      @metrics ||= []
+    end
 
     def data
       @data ||= (Modesty.data.class)::ExperimentData.new(self)
@@ -75,7 +78,7 @@ module Modesty
     end
 
     def stats
-      @stats ||= []
+      @stats ||= {}
     end
 
     def ab_test
@@ -95,7 +98,10 @@ module Modesty
   end
 
   module ExperimentMethods
-    attr_accessor :experiments
+    attr_writer :experiments
+    def experiments
+      @experiments ||= {}
+    end
 
     def add_experiment(exp)
       @experiments ||= {}
