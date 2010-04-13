@@ -1,7 +1,7 @@
 require File.join(
   Modesty::ROOT,
   '../vendor/redis-rb/lib/redis.rb'
-)
+) unless defined? Redis
 
 module Modesty
   class RedisData < Datastore
