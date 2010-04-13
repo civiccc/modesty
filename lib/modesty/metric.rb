@@ -77,6 +77,7 @@ module Modesty
 
     def parse_date(date)
       if date.is_a? Symbol
+        return date if date == :all
         Date.send(date)
       elsif date.nil?
         Date.today
