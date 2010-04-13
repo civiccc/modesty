@@ -11,14 +11,16 @@ module Modesty
       @identifier = blk if blk
     end
 
-    def identify!(*args)
+    def identify!(*args, &blk)
       if @identifier
         if @identifier.arity >= 0 && @identifier.arity != args.count
           raise ArgumentError, "Wrong number of arguments (#{args.count} for #{@identifier.arity})"
         end
         @identity = @identifier.call(*args)
-      elsif args[0].is_a? Fixnum
+      else
+        return @identity = blk.call(*args) if blk
         @identity = args[0]
+        @identity = @identity.to_i if @identity
       end
     end
   end

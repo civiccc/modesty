@@ -36,7 +36,9 @@ module Modesty
     def self.keyify(*args)
       args.map {|a| a.to_s}.map do |a|
         (a.is_a?(Date)) ? date_key(a) : a
-      end.gsub(/[^\w\-]/,'_').unshift('modesty').join(':')
+      end.map do |k|
+        k.gsub(/[^\w\-]/,'_')
+      end.unshift('modesty').join(':')
     end
 
     class MetricData < Datastore::MetricData
@@ -105,7 +107,7 @@ module Modesty
       end
 
       def register!(alt=nil)
-        alt ||= @experiment.ab_test
+        alt ||= @experiment.choose_case
         old_alt = self.get_cached_alternative
         if old_alt
           data.srem(self.key(old_alt), Modesty.identity)

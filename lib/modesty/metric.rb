@@ -101,9 +101,9 @@ module Modesty
       by_range = :"#{all_or_unique}_by_range"
       date_or_range = (start.nil?) ? :all : parse_date_or_range(start, fin)
       if date_or_range.is_a? Range
-        begin
+        if self.data.respond_to?(by_range)
           return self.data.send(by_range, sym, date_or_range)
-        rescue NoMethodError
+        else
           return date_or_range.map do |date|
             self.data.send(all_or_unique, sym, date)
           end
@@ -135,7 +135,7 @@ module Modesty
       if Modesty.identity
         with[:users] ||= Modesty.identity
         self.experiments.each do |exp|
-          alt = exp.ab_test
+          alt = exp.choose_case
           (self/(exp.slug/alt)).data.track!(count, with)
         end
       end

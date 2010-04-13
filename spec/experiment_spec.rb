@@ -51,7 +51,7 @@ describe "A/B testing" do
     (0..(3*100-1)).each do |i|
       Modesty.identify! i
       [:lightweight, :middleweight, :heavyweight].each do |alt|
-        Modesty.ab_test :creation_page/alt do
+        Modesty.case :creation_page/alt do
           Modesty.track! :baz
           Modesty.metrics[:baz/:creation_page/alt].count.should be_close i/3, 2+i/6
         end
@@ -90,7 +90,7 @@ describe "A/B testing" do
     lambda do
       (0..(3*100-1)).each do |i|
         Modesty.identify! i
-        Modesty.experiments[:creation_page].ab_test
+        Modesty.experiments[:creation_page].choose_case
       end
     end.should_not raise_error
     class Modesty::Experiment
@@ -104,7 +104,7 @@ describe "A/B testing" do
     2.times do
       e.alternatives.each do |alt|
         e.chooses alt
-        e.ab_test.should == alt
+        e.choose_case.should == alt
       end
     end
   end

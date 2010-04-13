@@ -70,7 +70,7 @@ module Modesty
       self.users(alt).count
     end
 
-    def ab_test
+    def choose_case
       raise Modesty::IdentityError, "Try calling Modesty.identify! first." unless Modesty.identity
       self.data.get_cached_alternative || self.generate_alternative
     end
@@ -81,8 +81,8 @@ module Modesty
       ]
     end
 
-    def ab_test?(alt)
-      self.ab_test == alt
+    def case?(alt)
+      self.choose_case == alt
     end
   end
 
@@ -117,33 +117,33 @@ module Modesty
     end
 
     # Usage:
-    # >> Modesty.ab_test :experiment/:alternative do
+    # >> Modesty.case :experiment/:alternative do
     # >>   #something
     # >> end
     # Or:
-    # >> ab_test :experiment
+    # >> Modesty.case :experiment
     # => :current_alternative
-    def ab_test(sym)
+    def case(sym)
       if sym.to_s['/']
         exp, alt = sym.to_s.split(/\//).map { |s| s.to_sym }
         exp = self.get_experiment(exp)
-        yield if block_given? && exp.ab_test?(alt)
+        yield if block_given? && exp.case?(alt)
       else
         exp = self.get_experiment(sym)
-        exp.ab_test
+        exp.choose_case
       end
     end
 
     # Usage:
-    # if Modesty.ab_test? :experiment/:alternative
+    # if Modesty.case? :experiment/:alternative
     #   #something
     # else
     #   #something else
     # end
-    def ab_test?(sym)
+    def case?(sym)
       exp, alt = sym.to_s.split(/\//).map { |s| s.to_sym }
       exp = self.get_experiment(exp)
-      exp.ab_test? sym
+      exp.case? sym
     end
   end
 

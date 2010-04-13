@@ -126,7 +126,7 @@ describe Modesty::Metric, "Tracking Metrics" do
     Modesty.metrics[:foo/:bar].unique(:zings).should == 2
     Modesty.metrics[:foo/:bar].all(:zings).count.should == 2
 
-    Modesty.metrics[:foo/:bar].unique(:zings, :yesterday).should == 0
+    Modesty.metrics[:foo/:bar].unique(:zings, Date.parse('1/1/2002')).should == 0
     Modesty.metrics[:foo/:bar].unique(:zings, :all).should == 2
   end
 end
