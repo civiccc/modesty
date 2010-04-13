@@ -136,8 +136,11 @@ module Modesty
       if Modesty.identity
         with[:users] ||= Modesty.identity
         self.experiments.each do |exp|
-          alt = exp.choose_case
-          (self/(exp.slug/alt)).data.track!(count, with)
+          # only track the for the experiment group if
+          # the user has previously hit the experiment
+          if (alt = exp.data.get_cached_alternative)
+            (self/(exp.slug/alt)).data.track!(count, with)
+          end
         end
       end
 

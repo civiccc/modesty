@@ -98,6 +98,20 @@ describe "A/B testing" do
     end
   end
 
+  it "tracks the experiment group if you've hit the experiment" do
+    Modesty.identify! 500 #not in the experiment group yet
+    [:lightweight, :middleweight, :heavyweight].each do |alt|
+      lambda do
+        Modesty.track! :baz
+      end.should_not change(Modesty.metrics[:baz/:creation_page/alt], :count)
+    end
+
+    alt = Modesty.case :creation_page
+    lambda do
+      Modesty.track! :baz
+    end.should change(Modesty.metrics[:baz/:creation_page/alt], :count).by(1)
+  end
+
   it "allows for manually setting your experiment group" do
     Modesty.identify! 50
     e = Modesty.experiments[:creation_page]
