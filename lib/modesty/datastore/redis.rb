@@ -72,25 +72,40 @@ module Modesty
         data.mget(keys)
       end
 
+      def distribution(date)
+        Hash[data.hgetall(self.key(date, :counts)).map do |k,v|
+          [k, v.to_i]
+        end]
+      end
+
       def unique(param, date)
-        data.scard(with_key(param, date))
+        data.hlen(with_key(param, date))
       end
 
       def all(param, date)
-        data.smembers(with_key(param, date))
+        data.hkeys(with_key(param, date))
+      end
+
+      def distribution_by(param, date)
+        Hash[data.hgetall(with_key(param, date)).map do |k,v|
+          [k, v.to_i]
+        end]
       end
 
       def track!(count, with)
-        data.incrby(self.key(Date.today, 'count'), count)
-        data.hincrby(self.key('counts'), count, 1)
+        data.incrby( self.key(Date.today, :count),  count)
+        data.incrby( self.key(:all,       :count),  count)
+        data.hincrby(self.key(Date.today, :counts), count, 1)
+        data.hincrby(self.key(:all,       :counts), count, 1)
 
         if !with[:users]
           data.incr(with_key(:users, Date.today, 'unidentified'))
         end
 
         with.each do |param, id|
-          data.sadd(with_key(param, Date.today), id)
-          data.sadd(with_key(param, :all), id)
+          data.sadd(with_key(:__keys__), param)
+          data.hincrby(with_key(param, Date.today), id, 1)
+          data.hincrby(with_key(param, :all), id, count)
         end
       end
     end

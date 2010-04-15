@@ -108,25 +108,29 @@ describe Modesty::Metric, "Tracking Metrics" do
   end
 
   it "can track with custom data" do
+    m = Modesty.metrics[:foo/:bar]
     lambda do
       Modesty.track! :foo/:bar, :with => {:zing => 56}
     end.should_not raise_error
-    Modesty.metrics[:foo/:bar].unique(:zings).should == 1
-    Modesty.metrics[:foo/:bar].all(:zings).should include 56
+    m.unique(:zings).should == 1
+    m.all(:zings).should include 56
 
     lambda do
       Modesty.track! :foo/:bar, :with => {:zing => 97}, :count => 4
     end.should_not raise_error
-    Modesty.metrics[:foo/:bar].unique(:zings).should == 2
-    Modesty.metrics[:foo/:bar].all(:zings).should include 97
+    m.unique(:zings).should == 2
+    m.all(:zings).should include 97
 
     lambda do
       Modesty.track! :foo/:bar, 7, :with => {:zing => 97}
     end.should_not raise_error
-    Modesty.metrics[:foo/:bar].unique(:zings).should == 2
-    Modesty.metrics[:foo/:bar].all(:zings).count.should == 2
+    m.unique(:zings).should == 2
+    m.all(:zings).count.should == 2
 
-    Modesty.metrics[:foo/:bar].unique(:zings, Date.parse('1/1/2002')).should == 0
-    Modesty.metrics[:foo/:bar].unique(:zings, :all).should == 2
+    m.unique(:zings, Date.parse('1/1/2002')).should == 0
+    m.unique(:zings, :all).should == 2
+
+    m.distribution_by(:zings).should == {56 => 1, 97 => 11}
+    m.distribution.should == {1 => 1, 7 => 1, 4 => 1}
   end
 end

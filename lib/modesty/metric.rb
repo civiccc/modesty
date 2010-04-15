@@ -21,21 +21,6 @@ module Modesty
     class << self
       private
       def data_type(name)
-        name_range = (name.to_s + '_range').to_sym
-        define_method(name) do |*args|
-          date_or_range = parse_date_or_range(*args[0..1])
-          if date_or_range.is_a? Range
-            begin
-              self.data.send(name_range, date_or_range)
-            rescue NoMethodError
-              date_or_range.map do |date|
-                self.data.send(name, date)
-              end
-            end
-          elsif date_or_range.is_a? Date
-            self.data.send(name, date_or_range)
-          end
-        end
       end
     end
 
@@ -80,32 +65,42 @@ module Modesty
       end
     end
 
-    data_type :count
-    data_type :unidentified_users
 
-    def get_by(all_or_unique, sym, start=nil, fin=nil)
-      sym = sym.to_sym
-      by_range = :"#{all_or_unique}_by_range"
-      date_or_range = (start.nil?) ? :all : parse_date_or_range(start, fin)
-      if date_or_range.is_a? Range
-        if self.data.respond_to?(by_range)
-          return self.data.send(by_range, sym, date_or_range)
-        else
-          return date_or_range.map do |date|
-            self.data.send(all_or_unique, sym, date)
+    [:count, :distribution].each do |data_type|
+      data_type_by_range = :"#{data_type}_by_range"
+      define_method(data_type) do |*dates|
+        date_or_range = parse_date_or_range(*dates)
+        if date_or_range.is_a? Range
+          if self.data_respond_to? data_type_by_range
+            self.data.send(data_type_by_range, date_or_range)
+          else
+            date_or_range.map do |date|
+              self.data.send(data_type, date)
+            end
           end
+        elsif date_or_range.is_a? Date
+          self.data.send(data_type, date_or_range)
         end
-      else
-        return self.data.send(all_or_unique, sym, date_or_range)
       end
     end
 
-    def all(*args)
-      self.get_by(:all, *args)
-    end
-
-    def unique(*args)
-      self.get_by(:unique, *args)
+    [:all, :unique, :distribution_by].each do |data_type|
+      define_method(data_type) do |sym, *dates|
+        sym = sym.to_sym
+        by_range = :"#{data_type}_by_range"
+        date_or_range = (dates.empty?) ? :all : parse_date_or_range(*dates)
+        if date_or_range.is_a? Range
+          if self.data.respond_to?(by_range)
+            return self.data.send(by_range, sym, date_or_range)
+          else
+            return date_or_range.map do |date|
+              self.data.send(data_type, sym, date)
+            end
+          end
+        else
+          return self.data.send(data_type, sym, date_or_range)
+        end
+      end
     end
 
     def track!(count=1, options={})
