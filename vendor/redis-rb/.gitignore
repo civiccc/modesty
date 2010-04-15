@@ -1,0 +1,9 @@
+nohup.out
+redis/*
+rdsrv
+pkg/*
+coverage/*
+.idea
+*.gemspec
+*.rdb
+*.swp

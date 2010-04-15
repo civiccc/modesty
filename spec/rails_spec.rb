@@ -27,7 +27,7 @@ describe "bootstrap" do
   end
 
   it "bootstraps Redis" do
-    Modesty.data.store.class.name.should == 'Redis'
+    Modesty.data.store.should be_an_instance_of Redis::Client
     Modesty.data.store.instance_variable_get("@port").should == 6379
     Modesty.data.store.instance_variable_get("@host").should == 'localhost'
   end

@@ -82,6 +82,7 @@ module Modesty
 
       def track!(count, with)
         data.incrby(self.key(Date.today, 'count'), count)
+        data.hincrby(self.key('counts'), count, 1)
 
         if !with[:users]
           data.incr(with_key(:users, Date.today, 'unidentified'))

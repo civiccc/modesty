@@ -1,0 +1,8 @@
+--- 
+vendor/redis-rb: 
+  squashed: true
+  url: git://github.com/ezmobius/redis-rb
+  branch: master
+  type: git
+  revision: 9e43fde887aa1bec9bf77cbcdd90371b52e5ba85
+  remote: braid/vendor/redis-rb
