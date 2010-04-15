@@ -1,8 +1,3 @@
-require File.join(
-  Modesty::ROOT,
-  '../vendor/redis-rb/lib/redis.rb'
-) unless defined? Redis
-
 module Modesty
   class RedisData < Datastore
     def self.date_key(date)
@@ -12,13 +7,14 @@ module Modesty
     def initialize(options={})
       if options['mock'] || options[:mock]
         require File.join(
-          Modesty::ROOT, '../vendor/mock_redis.rb'
+          Modesty::VENDOR, 'mock_redis.rb'
         )
         @store = MockRedis.new
       else
-        require File.join(
-          Modesty::ROOT, '../vendor/redis-rb/lib/redis' 
-        )
+        $:.unshift(File.join(Modesty::VENDOR, 'redis-rb', 'lib'))
+        require 'redis'
+        $:.shift
+
         @store = Redis.new(options)
       end
     end

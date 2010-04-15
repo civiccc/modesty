@@ -41,7 +41,7 @@ module Modesty
     end
   end
 
-  class << self
+  class API
     include DatastoreMethods
   end
 end

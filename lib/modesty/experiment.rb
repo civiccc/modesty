@@ -166,7 +166,7 @@ module Modesty
     end
   end
 
-  class << self
+  class API
     include ExperimentMethods
   end
 end

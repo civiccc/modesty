@@ -2,23 +2,21 @@ require 'yaml'
 require 'rubygems'
 require 'active_support'
 
-$:.unshift File.dirname(__FILE__)
 
 module Modesty
-  ROOT = File.dirname(__FILE__)
+  LIB = File.dirname(__FILE__)
+  VENDOR = File.expand_path(File.join(LIB, '..', 'vendor'))
 end
 
-$: << File.join(
-  File.dirname(__FILE__),
-  '../vendor/redis-rb/lib'
-)
-
-require 'modesty/core_ext'
-require 'modesty/datastore'
-require 'modesty/identity'
-require 'modesty/metric'
-require 'modesty/experiment'
-require 'modesty/load'
+$:.unshift Modesty::LIB
+require 'modesty/core_ext.rb'
+require 'modesty/api.rb'
+require 'modesty/datastore.rb'
+require 'modesty/identity.rb'
+require 'modesty/metric.rb'
+require 'modesty/experiment.rb'
+require 'modesty/load.rb'
+$:.shift
 
 if defined? Rails
   require 'modesty/frameworks/rails'

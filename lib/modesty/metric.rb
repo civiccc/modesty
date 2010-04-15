@@ -147,7 +147,7 @@ module Modesty
 
     def new_metric(slug, parent=nil, &block)
       metric = Metric.new(slug, parent)
-      yield Metric::Builder.new(metric) if block
+      yield Metric::Builder.new(metric) if block_given?
       add_metric(metric)
       metric
     end
@@ -162,7 +162,7 @@ module Modesty
     end
   end
 
-  class << self
+  class API
     include MetricMethods
   end
 end
