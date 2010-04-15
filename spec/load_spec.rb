@@ -12,7 +12,7 @@ describe "loading metrics" do
 
   it "can load metrics" do
     lambda do
-      Modesty::Metric.load_all!
+      Modesty.load_all_metrics!
     end.should_not raise_error
   end
 
@@ -37,13 +37,13 @@ end
 
 describe "Loading experiments" do
   before :all do
-    Modesty::Metric.load_all!
+    Modesty.load_all_metrics!
     Modesty.experiments = {}
   end
 
   it "can load experiments" do
     lambda do
-      Modesty::Experiment.load_all!
+      Modesty.load_all_experiments!
     end.should_not raise_error
   end
 

@@ -14,9 +14,14 @@ module Modesty
         @exp = exp
       end
 
+      def alternatives(*alts)
+        alts.unshift :control unless alts.include? :control
+        @exp.instance_variable_set("@alternatives", alts)
+      end
+
       def metrics(*args)
         metrics = args.map do |s|
-          Modesty.metrics[s] || raise(Modesty::NoMetricError, "Undefined metric '#{s}'")
+          Modesty.metrics[s] || raise(Modesty::NoMetricError, "Undefined metric '#{s}' in experiment #{@exp}'")
         end
         @exp.instance_variable_set("@metrics", metrics)
       end
@@ -28,49 +33,75 @@ module Modesty
 
     ATTRIBUTES = [
       :description,
-      :alternatives,
     ]
 
     attr_reader *ATTRIBUTES 
     attr_reader :slug
     attr_reader :metrics
 
+    def alternatives
+      @alternatives ||= [:control, :experiment]
+    end
+
+    def metrics
+      @metrics ||= []
+    end
+
     def data
       @data ||= (Modesty.data.class)::ExperimentData.new(self)
     end
 
-    def chooses(alt)
-      self.data.register! alt
+    def chooses(alt, options={})
+      if options.include? :for
+        #puts "registering a passed-in identity of #{options[:for].inspect}"
+        self.data.register!(alt, options[:for])
+      else
+        #puts "registering in chooses with Modesty.identity == #{Modesty.identity.inspect}"
+        self.data.register!(alt, Modesty.identity)
+      end
     end
 
-    def register!
-      self.data.register!
+    attr_reader :last_value
+    def group(group=nil)
+      if block_given?
+        if group && self.choose_group == group
+          @last_value = yield
+        else
+          @last_value
+        end
+      else
+        self.choose_group
+      end
+    end
+
+    def group?(alt)
+      self.choose_group == alt
+    end
+
+    def choose_group
+      return :control unless Modesty.identity #guests get the control group.
+      self.data.get_cached_alternative(Modesty.identity) || self.generate_alternative(Modesty.identity)
+    end
+
+    def generate_alternative(identity)
+      self.chooses(self.alternatives[ 
+        "#{@slug}#{identity}".hash % self.alternatives.count
+      ])
+    end
+
+    def num_users(alt=nil)
+      if self.data.respond_to? :num_users
+        self.data.num_users(alt)
+      else
+        self.users(alt).count
+      end
     end
 
     def users(alt=nil)
       self.data.users(alt)
     end
 
-    def num_users(alt=nil)
-      self.data.num_users(alt)
-    rescue NoMethodError
-      self.users(alt).count
-    end
 
-    def choose_case
-      raise Modesty::IdentityError, "Try calling Modesty.identify! first." unless Modesty.identity
-      self.data.get_cached_alternative || self.generate_alternative
-    end
-
-    def generate_alternative
-      self.data.register! @alternatives[ 
-        "#{@slug}#{Modesty.identity}".hash % @alternatives.count
-      ]
-    end
-
-    def case?(alt)
-      self.choose_case == alt
-    end
   end
 
   module ExperimentMethods
@@ -97,40 +128,41 @@ module Modesty
       exp
     end
 
-    def get_experiment(sym)
-      exp = Modesty.experiments[sym]
-      exp.register!
-      exp
-    end
-
-    # Usage:
-    # >> Modesty.case :experiment/:alternative do
-    # >>   #something
-    # >> end
-    # Or:
-    # >> Modesty.case :experiment
-    # => :current_alternative
-    def case(sym)
-      if sym.to_s['/']
-        exp, alt = sym.to_s.split(/\//).map { |s| s.to_sym }
-        exp = self.get_experiment(exp)
-        yield if block_given? && exp.case?(alt)
+    def decide_identity(options)
+      if options.include? :identity
+        options[:identity]
+      elsif options.include? :for
+        options[:for]
+      elsif options.include? :on
+        options[:on]
       else
-        exp = self.get_experiment(sym)
-        exp.choose_case
+        Modesty.identity
       end
     end
 
-    # Usage:
-    # if Modesty.case? :experiment/:alternative
-    #   #something
-    # else
-    #   #something else
-    # end
-    def case?(sym)
-      exp, alt = sym.to_s.split(/\//).map { |s| s.to_sym }
-      exp = self.get_experiment(exp)
-      exp.case? sym
+    def experiment(exp, options={}, &blk)
+      exp = self.experiments[exp]
+
+      identity = decide_identity(options)
+
+      self.with_identity identity do
+        yield exp
+      end
+
+      exp.last_value
+    end
+
+    def group?(sym)
+      exp = sym.to_s.split(/\//)
+      alt = exp.pop.to_sym
+      exp = exp.join('/').to_sym
+      exp = self.experiments[exp]
+      exp.group? alt
+    end
+
+    def group(sym)
+      exp = self.experiments[sym]
+      exp ? exp.group : :control
     end
   end
 

@@ -18,7 +18,7 @@ describe Modesty::Experiment, "creating an experiment" do
   it "can create an experiment with a block" do
     e = Modesty.new_experiment(:creation_page) do |m|
       m.description "Three versions of the creation page"
-      m.alternatives :heavyweight, :middleweight, :lightweight
+      m.alternatives :heavyweight, :lightweight
       m.metrics :foo/:bar, :baz
     end 
 
@@ -27,37 +27,82 @@ describe Modesty::Experiment, "creating an experiment" do
 
     e.metrics.should include Modesty.metrics[:foo/:bar]
     e.metrics.should include Modesty.metrics[:baz]
-    e.alternatives.should == [:heavyweight, :middleweight, :lightweight]
+    e.alternatives.should == [:control, :heavyweight, :lightweight]
     e.description.should == "Three versions of the creation page"
   end
 
+  it "uses [:control, :experiment] as the default experiment groups" do
+    e = Modesty.new_experiment :ab_test do |e|
+      e.description "only two groups"
+      e.metrics :baz
+    end
+
+    e.alternatives.should == [:control, :experiment]
+  end
+
   it "auto-creates metrics" do
-    Modesty.metrics.should include :foo/:bar/:creation_page/:heavyweight
-    Modesty.metrics.should include :foo/:bar/:creation_page/:middleweight
-    Modesty.metrics.should include :foo/:bar/:creation_page/:lightweight
-    Modesty.metrics.should include :baz/:creation_page/:heavyweight
-    Modesty.metrics.should include :baz/:creation_page/:middleweight
-    Modesty.metrics.should include :baz/:creation_page/:lightweight
+    Modesty.metrics.keys.should include :foo/:bar/:creation_page/:control
+    Modesty.metrics.keys.should include :foo/:bar/:creation_page/:heavyweight
+    Modesty.metrics.keys.should include :foo/:bar/:creation_page/:lightweight
+    Modesty.metrics.keys.should include :baz/:creation_page/:control
+    Modesty.metrics.keys.should include :baz/:creation_page/:heavyweight
+    Modesty.metrics.keys.should include :baz/:creation_page/:lightweight
+
+    Modesty.metrics.keys.should include :baz/:ab_test/:control
+    Modesty.metrics.keys.should include :baz/:ab_test/:experiment
   end
 end
 
 describe "A/B testing" do
   before :all do
-    Modesty.identify :default
     Modesty.set_store :redis, :mock => true
   end
 
   it "Selects evenly between alternatives" do
     (0..(3*100-1)).each do |i|
       Modesty.identify! i
-      [:lightweight, :middleweight, :heavyweight].each do |alt|
-        Modesty.case :creation_page/alt do
-          Modesty.track! :baz
-          Modesty.metrics[:baz/:creation_page/alt].count.should be_close i/3, 2+i/6
+      Modesty.experiment :creation_page do |exp|
+        [:control, :lightweight, :heavyweight].each do |alt|
+          exp.group alt do
+            Modesty.track! :baz
+          end
         end
       end
       Modesty.metrics[:baz].count.should == 1+i
     end
+  end
+
+  it "assigns guests to :control" do
+    Modesty.identify! nil
+    Modesty.group(:ab_test).should == :control
+    Modesty.group?(:ab_test/:control).should == true
+
+    Modesty.identify! 200
+  end
+
+  it "can use a passed-in identity" do
+    leet = Modesty.experiment :ab_test, :on => 1337 do |exp|
+      [:control, :experiment].each do |alt|
+        exp.group alt do
+          Modesty.identity
+        end
+      end
+    end
+
+    leet.should == 1337
+  end
+
+  it "can used a passed-in nil identity" do
+    test = Modesty.experiment :ab_test, :on => nil do |exp|
+      exp.group :control do
+        Modesty.identity
+      end
+      exp.group :experiment do
+        "fail"
+      end
+    end
+
+    test.should be_nil
   end
 
   it "tracks the users in each experimental group" do
@@ -73,7 +118,7 @@ describe "A/B testing" do
   it "tracks the number of users in each experimental group" do
     e = Modesty.experiments[:creation_page]
     e.num_users.should == 3*100
-    [:lightweight, :middleweight, :heavyweight].each do |alt|
+    [:lightweight, :control, :heavyweight].each do |alt|
       e.num_users(alt).should be_close 3*100/4, 2 + 3*100/6
     end
   end
@@ -90,7 +135,7 @@ describe "A/B testing" do
     lambda do
       (0..(3*100-1)).each do |i|
         Modesty.identify! i
-        Modesty.experiments[:creation_page].choose_case
+        Modesty.group :creation_page
       end
     end.should_not raise_error
     class Modesty::Experiment
@@ -100,13 +145,13 @@ describe "A/B testing" do
 
   it "tracks the experiment group if you've hit the experiment" do
     Modesty.identify! 500 #not in the experiment group yet
-    [:lightweight, :middleweight, :heavyweight].each do |alt|
+    [:control, :lightweight, :heavyweight].each do |alt|
       lambda do
         Modesty.track! :baz
       end.should_not change(Modesty.metrics[:baz/:creation_page/alt], :count)
     end
 
-    alt = Modesty.case :creation_page
+    alt = Modesty.group :creation_page
     lambda do
       Modesty.track! :baz
     end.should change(Modesty.metrics[:baz/:creation_page/alt], :count).by(1)
@@ -117,8 +162,10 @@ describe "A/B testing" do
     e = Modesty.experiments[:creation_page]
     2.times do
       e.alternatives.each do |alt|
-        e.chooses alt
-        e.choose_case.should == alt
+        lambda do
+          e.chooses alt
+          e.group.should == alt
+        end.should_not change(e, :num_users)
       end
     end
   end

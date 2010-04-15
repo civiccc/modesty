@@ -124,7 +124,7 @@ module Modesty
         self.experiments.each do |exp|
           # only track the for the experiment group if
           # the user has previously hit the experiment
-          if (alt = exp.data.get_cached_alternative)
+          if (alt = exp.data.get_cached_alternative(Modesty.identity))
             (self/(exp.slug/alt)).data.track!(count, with)
           end
         end

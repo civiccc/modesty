@@ -106,18 +106,17 @@ module Modesty
         ] + args.map { |a| a.to_s }).join(':')
       end
 
-      def register!(alt=nil)
-        alt ||= @experiment.choose_case
-        old_alt = self.get_cached_alternative
+      def register!(alt, identity)
+        #puts "Registering #{identity.inspect} in experiment group :#{@experiment.slug}/#{alt.inspect}"
+        old_alt = self.get_cached_alternative(identity)
         if old_alt
-          data.srem(self.key(old_alt), Modesty.identity)
+          data.srem(self.key(old_alt), identity)
         end
-        data.sadd(self.key(alt), Modesty.identity)
+        data.sadd(self.key(alt), identity)
         return alt
       end
 
-      def get_cached_alternative(identity=nil)
-        identity ||= Modesty.identity
+      def get_cached_alternative(identity)
         @experiment.alternatives.each do |alt|
           if data.sismember(self.key(alt), identity)
             return alt
@@ -142,7 +141,7 @@ module Modesty
             data.scard(self.key(alt)).to_i
           end.inject(0){|s,i|s+i}
         else
-          data.smembers(self.key(alt)).to_i
+          data.scard(self.key(alt)).to_i
         end
       end
 
