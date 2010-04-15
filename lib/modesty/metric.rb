@@ -85,9 +85,9 @@ module Modesty
     end
 
     [:all, :unique, :distribution_by].each do |data_type|
+      by_range = :"#{data_type}_by_range"
       define_method(data_type) do |sym, *dates|
         sym = sym.to_sym
-        by_range = :"#{data_type}_by_range"
         date_or_range = (dates.empty?) ? :all : parse_date_or_range(*dates)
         if date_or_range.is_a? Range
           if self.data.respond_to?(by_range)
@@ -119,7 +119,13 @@ module Modesty
         self.experiments.each do |exp|
           # only track the for the experiment group if
           # the user has previously hit the experiment
-          if (alt = exp.data.get_cached_alternative(Modesty.identity))
+          identity_slug = exp.identity_for(self)
+          identity = with[identity_slug] || Modesty.identity
+          raise IdentityError, """
+            #TODO
+          """.squish unless identity
+          alt = exp.data.get_cached_alternative(exp.identity_for(self))
+          if alt
             (self/(exp.slug/alt)).data.track!(count, with)
           end
         end
