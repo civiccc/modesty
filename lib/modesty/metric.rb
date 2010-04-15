@@ -19,20 +19,6 @@ module Modesty
     end
 
     class << self
-      attr_writer :dir
-      def dir
-        @dir ||= File.join(
-          Modesty::Experiment.dir,
-          'metrics'
-        )
-      end
-      
-      def load_all!
-        Dir.glob(
-          File.join(self.dir, '**')
-        ).each { |f| load f }
-      end
-
       private
       def data_type(name)
         name_range = (name.to_s + '_range').to_sym
