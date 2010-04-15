@@ -21,13 +21,11 @@ describe Modesty, "Working with identities" do
 end
 
 describe Modesty, "contextual identity" do
-  before :all do
+  before :each do
     Modesty.experiments.clear
     Modesty.metrics.clear
     Modesty.data.flushdb
-  end
 
-  it "can make an experiment with contextual identities for its metrics" do
     Modesty.new_metric :donation_amount
     Modesty.new_metric :donation
     Modesty.new_metric :creation
@@ -37,44 +35,76 @@ describe Modesty, "contextual identity" do
       e.metric :donation, :by => :creator
       e.metric :donation_amount, :by => :creator
     end
+    @e = Modesty.experiments[:creation_page]
+    Modesty.identify! nil
+
+    @e.chooses :experiment, :for => 500
+    @e.chooses :control, :for => 600
+    @e.chooses :experiment, :for => 700
+    @group_exp = Modesty.metrics[:donation_amount/:creation_page/:experiment]
+    @group_ctrl = Modesty.metrics[:donation_amount/:creation_page/:control]
   end
 
   it "leaves the other metrics alone" do
-    e = Modesty.experiments[:creation_page]
-    e.chooses :experiment, :for => 700
-    Modesty.identify! 700
-    e.group.should == :experiment
+    Modesty.with_identity 700 do
+      @e.group.should == :experiment
+      Modesty.track! :creation
+    end
 
-    Modesty.track! :creation
     m = Modesty.metrics[:creation/:creation_page/:experiment]
     m.distribution.should == {1 => 1}
   end
 
   it "expects a passed-in identity for the specified metrics" do
+    Modesty.identify! 700
     lambda do
       Modesty.track! :donation
     end.should raise_error(Modesty::IdentityError)
   end
 
   it "aggregates counts by the contextual identity's experiment group" do
-    e = Modesty.experiments[:creation_page]
-    e.chooses :control, :for => 600
-    Modesty.identify! 600
-    lambda do
-      #user 600 donated 10 bucks to user 700's birthday wish!
-      Modesty.track! :donation_amount, 10, :creator => 700
-    end.should_not raise_error
-    group_exp = Modesty.metrics[:donation_amount/:creation_page/:experiment]
-    group_exp.distribution.should == {10 => 1}
-    group_ctrl = Modesty.metrics[:donation_amount/:creation_page/:control]
-    group_ctrl.distribution.should == {}
+    Modesty.with_identity 600 do
+      lambda do
+        #user 600 donated 10 bucks to user 700's birthday wish!
+        Modesty.track! :donation_amount, 10, :with => {:creator => 700}
+      end.should_not raise_error
+    end
+    @group_exp.distribution.should == {10 => 1}
+    @group_ctrl.distribution.should == {}
 
-    e.chooses :experiment, :for => 500
+    @e.chooses :experiment, :for => 500
     #user 500 donated 2000 to 600's wish
-    Modesty.identify! 500
-    Modesty.track! :donation_amount, 2000, :creator => 600
+    Modesty.with_identity 500 do
+      Modesty.track! :donation_amount, 2000, :with => {:creator => 600}
+    end
 
-    group_exp.distribution.should == {10 => 1}
-    group_ctrl.distribution.should == {2000 => 1}
+    @group_exp.distribution.should == {10 => 1}
+    @group_ctrl.distribution.should == {2000 => 1}
+  end
+
+  it "verify that all(:users) still remembers the real users" do
+    # user 600, who is in the control group, donates $45 to user 700's wish
+    Modesty.with_identity 600 do
+      Modesty.track! :donation_amount, 45, :with => {:creator => 700}
+    end
+
+    # user 500, who is in the experiment group, donates $30 to user 700's wish
+    Modesty.with_identity 500 do
+      Modesty.track! :donation_amount, 30, :with => {:creator => 700}
+    end
+
+    # a guest donates $15 to user 700's wish
+    Modesty.with_identity nil do
+      Modesty.track! :donation_amount, 15, :with => {:creator => 700}
+    end
+
+    @group_exp.distribution.should == {45 => 1, 30 => 1, 15 => 1}
+    @group_ctrl.distribution.should == {}
+    @group_exp.distribution_by(:creator).should == {700 => {45 => 1, 30 => 1, 15 => 1}}
+    @group_ctrl.distribution_by(:creator).should == {}
+
+    @group_exp.all(:creators).should == [700]
+    @group_exp.all(:users).should == [500, 600]
+    @group_exp.unidentified_users.should == 1
   end
 end
