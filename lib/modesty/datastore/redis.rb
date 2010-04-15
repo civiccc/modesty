@@ -46,7 +46,7 @@ module Modesty
         Modesty.data
       end
 
-      def with_key(param, *args)
+      def key_for_with(param, *args)
         RedisData.keyify(:metric_with, param, @metric.slug, *args)
       end
 
@@ -60,11 +60,11 @@ module Modesty
       end
 
       def unidentified_users(date)
-        data.get(with_key(:users, date, :unidentified))
+        data.get(key_for_with(:users, date, :unidentified))
       end
 
       def unidentified_users_range(range)
-        keys = range.map { |d| with_key(:users, d, :unidentified) }
+        keys = range.map { |d| key_for_with(:users, d, :unidentified) }
         data.mget(keys)
       end
 
@@ -75,35 +75,51 @@ module Modesty
       end
 
       def unique(param, date)
-        data.hlen(with_key(param, date))
+        data.scard(key_for_with(param, date))
       end
 
       def all(param, date)
-        data.hkeys(with_key(param, date))
+        data.smembers(key_for_with(param, date))
       end
 
       def distribution_by(param, date)
-        Hash[data.hgetall(with_key(param, date)).map do |k,v|
-          [k, v.to_i]
-        end]
+        ids = data.smembers(key_for_with(param, date))
+        h = {}
+        ids.each do |id|
+          h[id] = Hash[data.hgetall(key_for_with(param, date, id)).map do |k,v|
+            [k, v.to_i]
+          end]
+        end
+        return h
       end
 
-      def track!(count, with)
-        data.incrby( self.key(Date.today, :count),  count)
-        data.incrby( self.key(:all,       :count),  count)
-        data.hincrby(self.key(Date.today, :counts), count, 1)
-        data.hincrby(self.key(:all,       :counts), count, 1)
+      def track!(count, with_args)
+        [:all, Date.today].each do |date|
+          self.add_counts(date, count)
 
-        if !with[:users]
-          data.incr(with_key(:users, Date.today, 'unidentified'))
-        end
+          self.count_unidentified_user(date) unless with_args[:users]
 
-        with.each do |param, id|
-          data.sadd(with_key(:__keys__), param)
-          data.hincrby(with_key(param, Date.today), id, 1)
-          data.hincrby(with_key(param, :all), id, count)
+          with_args.each do |param, id|
+            self.add_param_counts(date, count, param, id)
+          end
         end
       end
+
+      def add_counts(date, count)
+        data.incrby(self.key(date, :count),  count)
+        data.hincrby(self.key(date, :counts), count, 1)
+      end
+
+      def add_param_counts(date, count, param, id)
+        data.sadd(key_for_with(:__keys__), param)
+        data.sadd(key_for_with(param, date), id)
+        data.hincrby(key_for_with(param, date, id), count, 1)
+      end
+
+      def count_unidentified_user(date)
+        data.incr(key_for_with(:users, date, 'unidentified'))
+      end
+
     end
 
     class ExperimentData < Datastore::ExperimentData

@@ -153,8 +153,8 @@ describe "A/B testing" do
 
     alt = Modesty.group :creation_page
     lambda do
-      Modesty.track! :baz
-    end.should change(Modesty.metrics[:baz/:creation_page/alt], :count).by(1)
+      Modesty.track! :baz, 5
+    end.should change(Modesty.metrics[:baz/:creation_page/alt], :count).by(5)
   end
 
   it "allows for manually setting your experiment group" do

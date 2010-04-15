@@ -1,6 +1,10 @@
 require 'modesty'
 
 describe Modesty::Metric, "Creating Metrics" do
+  before :all do
+    Modesty.set_store :redis, :mock => true
+  end
+
   before :each do
     Modesty.metrics = {}
   end
@@ -130,7 +134,7 @@ describe Modesty::Metric, "Tracking Metrics" do
     m.unique(:zings, Date.parse('1/1/2002')).should == 0
     m.unique(:zings, :all).should == 2
 
-    m.distribution_by(:zings).should == {56 => 1, 97 => 11}
+    m.distribution_by(:zings).should == {56=>{1=>1}, 97=>{7=>1, 4=>1}}
     m.distribution.should == {1 => 1, 7 => 1, 4 => 1}
   end
 end
