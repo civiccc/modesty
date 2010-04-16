@@ -120,7 +120,7 @@ module Modesty
           # only track the for the experiment group if
           # the user has previously hit the experiment
           identity_slug = exp.identity_for(self)
-          identity = with[identity_slug] || Modesty.identity
+          identity = identity_slug ? with[identity_slug] : Modesty.identity
           raise IdentityError, """
             #TODO
           """.squish unless identity
