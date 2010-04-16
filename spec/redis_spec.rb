@@ -8,6 +8,7 @@ describe "Real Redis" do
   end
 
   it "can track metrics in real redis" do
+    Modesty.new_metric :foo
     lambda do
       (1..100).each do |i|
         Modesty.track! :foo, 2
