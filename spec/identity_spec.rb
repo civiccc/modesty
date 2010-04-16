@@ -105,6 +105,6 @@ describe Modesty, "contextual identity" do
 
     @group_exp.all(:creators).should == [700]
     @group_exp.all(:users).should == [500, 600]
-    @group_exp.unidentified_users.should == 1
+    @group_exp.data.unidentified_users.should == 1
   end
 end
