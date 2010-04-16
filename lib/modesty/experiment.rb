@@ -35,7 +35,7 @@ module Modesty
           "Undefined metric #{s.inspect} in experiment #{@exp}"
         ))
         if options[:by]
-          @exp.metric_contexts.merge!({sym => options[:by]})
+          @exp.metric_contexts.merge!({sym => options[:by].to_s.pluralize.to_sym})
         end
       end
     end
