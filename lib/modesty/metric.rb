@@ -114,16 +114,21 @@ module Modesty
         [k.to_s.pluralize.to_sym, v]
       end]
 
-      if Modesty.identity
-        with[:users] ||= Modesty.identity
-        self.experiments.each do |exp|
-          # only track the for the experiment group if
-          # the user has previously hit the experiment
-          identity_slug = exp.identity_for(self)
-          identity = identity_slug ? with[identity_slug] : Modesty.identity
+      with[:users] ||= Modesty.identity if Modesty.identity
+      self.experiments.each do |exp|
+        # only track the for the experiment group if
+        # the user has previously hit the experiment
+        identity_slug = exp.identity_for(self)
+        identity = if identity_slug
+          i = with[identity_slug]
           raise IdentityError, """
             #TODO
-          """.squish unless identity
+          """.squish unless i
+          i
+        else
+          Modesty.identity
+        end
+        if identity
           alt = exp.data.get_cached_alternative(identity)
           if alt
             (self/(exp.slug/alt)).data.track!(count, with)
