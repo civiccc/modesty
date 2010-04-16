@@ -143,12 +143,15 @@ module Modesty
   class NoMetricError < NameError; end
 
   module MetricMethods
-    attr_accessor :metrics
+    attr_writer :metrics
+
+    def metrics
+      @metrics ||= {}
+    end
 
     def add_metric(metric)
-      @metrics ||= {}
-      raise "Metric already defined!" if @metrics[metric.slug]
-      @metrics[metric.slug] = metric
+      raise "Metric already defined!" if self.metrics[metric.slug]
+      self.metrics[metric.slug] = metric
     end
 
     def new_metric(slug, parent=nil, &block)
@@ -160,8 +163,8 @@ module Modesty
 
     #Tracking
     def track!(sym, *args)
-      if @metrics.include? sym
-        @metrics[sym].track! *args
+      if self.metrics.include? sym
+        self.metrics[sym].track! *args
       else
         raise NoMetricError, "Unrecognized metric #{sym.inspect}"
       end
