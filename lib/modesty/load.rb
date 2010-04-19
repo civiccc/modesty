@@ -33,7 +33,7 @@ module Modesty
         ]
         self.set_store(type, data_options)
       else
-        self.set_store('mock')
+        self.set_store :redis, :mock => true
       end
     end
 
