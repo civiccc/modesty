@@ -21,9 +21,22 @@ module Modesty
 
       def metrics(*args)
         metrics = args.map do |s|
-          Modesty.metrics[s] || raise(Modesty::NoMetricError, "Undefined metric '#{s}' in experiment #{@exp}'")
+          Modesty.metrics[s] || raise(
+            Modesty::NoMetricError,
+            "Undefined metric '#{s.inspect}' in experiment #{@exp}'"
+          )
         end
         @exp.instance_variable_set("@metrics", metrics)
+      end
+
+      def metric(sym, options={})
+        @exp.metrics << (Modesty.metrics[sym] || raise(
+          Modesty::NoMetricError,
+          "Undefined metric #{s.inspect} in experiment #{@exp}"
+        ))
+        if options[:by]
+          @exp.metric_contexts.merge!({sym => options[:by].to_s.pluralize.to_sym})
+        end
       end
     end
 
@@ -35,9 +48,18 @@ module Modesty
       :description,
     ]
 
+    def identity_for(sym)
+      sym = sym.slug if sym.is_a? Metric
+      self.metric_contexts[sym]
+    end
+
     attr_reader *ATTRIBUTES 
     attr_reader :slug
     attr_reader :metrics
+
+    def metric_contexts
+      @metric_contexts ||= {}
+    end
 
     def alternatives
       @alternatives ||= [:control, :experiment]
@@ -100,8 +122,6 @@ module Modesty
     def users(alt=nil)
       self.data.users(alt)
     end
-
-
   end
 
   module ExperimentMethods

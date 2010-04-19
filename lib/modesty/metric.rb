@@ -85,9 +85,9 @@ module Modesty
     end
 
     [:all, :unique, :distribution_by].each do |data_type|
+      by_range = :"#{data_type}_by_range"
       define_method(data_type) do |sym, *dates|
         sym = sym.to_sym
-        by_range = :"#{data_type}_by_range"
         date_or_range = (dates.empty?) ? :all : parse_date_or_range(*dates)
         if date_or_range.is_a? Range
           if self.data.respond_to?(by_range)
@@ -114,12 +114,23 @@ module Modesty
         [k.to_s.pluralize.to_sym, v]
       end]
 
-      if Modesty.identity
-        with[:users] ||= Modesty.identity
-        self.experiments.each do |exp|
-          # only track the for the experiment group if
-          # the user has previously hit the experiment
-          if (alt = exp.data.get_cached_alternative(Modesty.identity))
+      with[:users] ||= Modesty.identity if Modesty.identity
+      self.experiments.each do |exp|
+        # only track the for the experiment group if
+        # the user has previously hit the experiment
+        identity_slug = exp.identity_for(self)
+        identity = if identity_slug
+          i = with[identity_slug]
+          raise IdentityError, """
+            #TODO
+          """.squish unless i
+          i
+        else
+          Modesty.identity
+        end
+        if identity
+          alt = exp.data.get_cached_alternative(identity)
+          if alt
             (self/(exp.slug/alt)).data.track!(count, with)
           end
         end
@@ -137,12 +148,15 @@ module Modesty
   class NoMetricError < NameError; end
 
   module MetricMethods
-    attr_accessor :metrics
+    attr_writer :metrics
+
+    def metrics
+      @metrics ||= {}
+    end
 
     def add_metric(metric)
-      @metrics ||= {}
-      raise "Metric already defined!" if @metrics[metric.slug]
-      @metrics[metric.slug] = metric
+      raise "Metric already defined!" if self.metrics[metric.slug]
+      self.metrics[metric.slug] = metric
     end
 
     def new_metric(slug, parent=nil, &block)
@@ -154,8 +168,8 @@ module Modesty
 
     #Tracking
     def track!(sym, *args)
-      if @metrics.include? sym
-        @metrics[sym].track! *args
+      if self.metrics.include? sym
+        self.metrics[sym].track! *args
       else
         raise NoMetricError, "Unrecognized metric #{sym.inspect}"
       end

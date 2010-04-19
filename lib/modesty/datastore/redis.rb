@@ -59,13 +59,13 @@ module Modesty
         data.mget(keys).map { |s| s.to_i }
       end
 
-      def unidentified_users(date)
-        data.get(key_for_with(:users, date, :unidentified))
+      def unidentified_users(date = :all)
+        data.get(key_for_with(:users, date, :unidentified)).to_i
       end
 
       def unidentified_users_range(range)
         keys = range.map { |d| key_for_with(:users, d, :unidentified) }
-        data.mget(keys)
+        data.mget(keys).map(&:to_i)
       end
 
       def distribution(date)
@@ -117,7 +117,7 @@ module Modesty
       end
 
       def count_unidentified_user(date)
-        data.incr(key_for_with(:users, date, 'unidentified'))
+        data.incr(key_for_with(:users, date, :unidentified))
       end
 
     end
