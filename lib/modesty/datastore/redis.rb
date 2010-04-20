@@ -156,10 +156,8 @@ module Modesty
       end
 
       def users(alt=nil)
-        if alt.nil? #return the sum
-          @experiment.alternatives.map do |alt|
-            data.smembers(self.key(alt))
-          end.inject([]){|s,i|s+i}
+        if alt.nil? #return the union
+          data.sunion(*@experiment.alternatives.map {|a| self.key(a) })
         else
           data.smembers(self.key(alt))
         end.map(&:to_i)
