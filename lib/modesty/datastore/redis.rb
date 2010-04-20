@@ -137,7 +137,6 @@ module Modesty
       end
 
       def register!(alt, identity)
-        #puts "Registering #{identity.inspect} in experiment group :#{@experiment.slug}/#{alt.inspect}"
         old_alt = self.get_cached_alternative(identity)
         if old_alt
           data.srem(self.key(old_alt), identity)
@@ -167,7 +166,7 @@ module Modesty
         if alt.nil?
           @experiment.alternatives.map do |alt|
             data.scard(self.key(alt)).to_i
-          end.inject(0){|s,i|s+i}
+          end.sum
         else
           data.scard(self.key(alt)).to_i
         end
@@ -176,8 +175,3 @@ module Modesty
     end
   end
 end
-
-#require File.join(
-#  File.dirname(__FILE__),
-#  'key_value_methods'
-#)
