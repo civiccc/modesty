@@ -7,11 +7,13 @@ module Modesty
     def initialize(options={})
       if options['mock'] || options[:mock]
         require File.join(
-          Modesty::VENDOR, 'mock_redis.rb'
+          Modesty::VENDOR, 'mock_redis', 'lib', 'mock_redis.rb'
         )
         @store = MockRedis.new
       else
-        $:.unshift(File.join(Modesty::VENDOR, 'redis-rb', 'lib'))
+        $:.unshift(File.join(
+          Modesty::VENDOR, 'redis-rb', 'lib'
+        ))
         require 'redis'
         $:.shift
 
@@ -56,7 +58,7 @@ module Modesty
 
       def count_range(range)
         keys = range.map { |d| self.key(d, 'count') }
-        data.mget(keys).map { |s| s.to_i }
+        data.mget(keys).map(&:to_i?)
       end
 
       def unidentified_users(date = :all)
@@ -65,12 +67,12 @@ module Modesty
 
       def unidentified_users_range(range)
         keys = range.map { |d| key_for_with(:users, d, :unidentified) }
-        data.mget(keys).map(&:to_i)
+        data.mget(keys).map(&:to_i?)
       end
 
       def distribution(date)
         Hash[data.hgetall(self.key(date, :counts)).map do |k,v|
-          [k, v.to_i]
+          [k.to_i?, v.to_i]
         end]
       end
 
@@ -79,15 +81,15 @@ module Modesty
       end
 
       def all(param, date)
-        data.smembers(key_for_with(param, date))
+        data.smembers(key_for_with(param, date)).map(&:to_i?)
       end
 
       def distribution_by(param, date)
-        ids = data.smembers(key_for_with(param, date))
+        ids = data.smembers(key_for_with(param, date)).map(&:to_i?)
         h = {}
         ids.each do |id|
           h[id] = Hash[data.hgetall(key_for_with(param, date, id)).map do |k,v|
-            [k, v.to_i]
+            [k.to_i?, v.to_i]
           end]
         end
         return h
@@ -160,7 +162,7 @@ module Modesty
           end.inject([]){|s,i|s+i}
         else
           data.smembers(self.key(alt))
-        end
+        end.map(&:to_i)
       end
 
       def num_users(alt=nil)
