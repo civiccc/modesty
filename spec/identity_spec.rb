@@ -15,6 +15,12 @@ describe Modesty, "Working with identities" do
     Modesty.identity.should be_nil
   end
 
+  it "can't identify as anything other than a Fixnum or nil." do
+    lambda do
+      Modesty.identify! "foo"
+    end.should raise_error(Modesty::IdentityError)
+  end
+
   after :all do
     Modesty.instance_variable_set("@identity", nil)
   end

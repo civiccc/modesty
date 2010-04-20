@@ -7,7 +7,14 @@ module Modesty
     attr_reader :identity
 
     def identify!(id, opts={})
-      @identity = id unless opts[:ignore]
+      unless opts[:ignore]
+        raise(
+          IdentityError,
+          "Identity must be an integer or nil."
+        ) unless id.nil? || id.is_a?(Fixnum)
+
+        @identity = id
+      end
     end
 
     def with_identity(id)
