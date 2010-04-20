@@ -1,8 +1,15 @@
 --- 
 vendor/redis-rb: 
   squashed: true
-  url: git://github.com/ezmobius/redis-rb
   branch: master
+  url: git://github.com/ezmobius/redis-rb
   type: git
   revision: 9e43fde887aa1bec9bf77cbcdd90371b52e5ba85
   remote: braid/vendor/redis-rb
+vendor/mock_redis: 
+  squashed: true
+  url: git://github.com/jayferd/mock_redis
+  branch: master
+  type: git
+  revision: a27f5b39ada1cc69799374a4c5844714a465e600
+  remote: braid/vendor/mock-redis
