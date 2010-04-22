@@ -1,5 +1,4 @@
-.*.swo
-.*.swp
+.*.sw[a-z]
 *~
 *.rdb
 tmp*
