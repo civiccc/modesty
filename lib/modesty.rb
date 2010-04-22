@@ -5,7 +5,9 @@ require 'active_support'
 
 module Modesty
   LIB = File.dirname(__FILE__)
-  VENDOR = File.expand_path(File.join(LIB, '..', 'vendor'))
+  ROOT = File.expand_path(File.join(LIB, '..'))
+  VENDOR = File.expand_path(File.join(ROOT, 'vendor'))
+  TEST = File.expand_path(File.join(ROOT, 'test'))
 end
 
 $:.unshift Modesty::LIB

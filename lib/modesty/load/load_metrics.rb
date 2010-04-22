@@ -3,7 +3,7 @@ module Modesty
     attr_writer :metrics_dir
     def metrics_dir
       @metrics_dir ||= File.join(
-        Modesty.experiments_dir,
+        Modesty.root,
         'metrics'
       )
     end

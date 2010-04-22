@@ -26,8 +26,7 @@ module Modesty
       end
 
       if options['datastore'] && options['datastore']['type']
-        type = options['datastore']['type']
-        options['datastore'].delete 'type'
+        type = options['datastore'].delete
         data_options = Hash[
           options['datastore'].map { |k,v| [k.to_sym, v] }
         ]

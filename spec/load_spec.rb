@@ -3,8 +3,8 @@ require 'modesty'
 describe "loading metrics" do
   before :all do
     Modesty.root = File.join(
-      File.dirname(__FILE__),
-      '../test/myapp/'
+      Modesty::TEST,
+      'myapp'
     )
 
     Modesty.metrics = {}
