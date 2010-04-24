@@ -2,6 +2,14 @@ require 'modesty'
 
 describe "bootstrap" do
   before :all do
+    Modesty.root = File.join(
+      Modesty::TEST,
+      'myapp'
+    )
+    Modesty.metrics = {}
+    Modesty.experiments = {}
+    Modesty.load!
+
     unless defined? Rails
       class Rails
         def self.root
@@ -33,10 +41,10 @@ describe "bootstrap" do
   end
 
   it "loads metrics" do
-    Modesty.metrics.should include :baked_goods
+    Modesty.metrics.keys.should include :baked_goods
   end
 
   it "loads experiments" do
-    Modesty.experiments.should include :cookbook
+    Modesty.experiments.keys.should include :cookbook
   end
 end
