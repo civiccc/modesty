@@ -25,8 +25,10 @@ module Modesty
         {}
       end
 
-      options['paths'].each do |data, path|
-        Modesty.send("#{data}_dir=", File.join(Modesty.root, path))
+      if options['paths']
+        options['paths'].each do |data, path|
+          Modesty.send("#{data}_dir=", File.join(Modesty.root, path))
+        end
       end
 
       if options['datastore'] && options['datastore']['type']
