@@ -7,7 +7,7 @@ module Modesty
         'metrics'
       )
     end
-    
+
     def load_all_metrics!
       Dir.glob(
         File.join(self.metrics_dir, '**')

@@ -21,12 +21,16 @@ module Modesty
     def load_config!
       options = begin
         YAML.load(File.read(self.config_path))
-      rescue Errno::ENOENT 
+      rescue Errno::ENOENT
         {}
       end
 
+      options['paths'].each do |data, path|
+        Modesty.send("#{data}_dir=", File.join(Modesty.root, path))
+      end
+
       if options['datastore'] && options['datastore']['type']
-        type = options['datastore'].delete
+        type = options['datastore'].delete('type')
         data_options = Hash[
           options['datastore'].map { |k,v| [k.to_sym, v] }
         ]

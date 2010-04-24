@@ -1,5 +1,29 @@
 require 'modesty'
 
+describe "the config file" do
+  before :all do
+    Modesty.root = File.join(
+      Modesty::TEST,
+      'myapp'
+    )
+    Modesty.load_config!
+  end
+
+  it "can set the metrics directory" do
+    Modesty.metrics_dir.should ==
+      File.expand_path(
+        File.join(
+          File.dirname(__FILE__),
+          "../test/myapp/experiments/metrics"
+        )
+      )
+  end
+
+  after :all do
+    Modesty.root = nil
+  end
+end
+
 describe "loading metrics" do
   before :all do
     Modesty.root = File.join(
