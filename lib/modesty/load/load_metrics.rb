@@ -10,7 +10,7 @@ module Modesty
 
     def load_all_metrics!
       Dir.glob(
-        File.join(self.metrics_dir, '**')
+        File.join(self.metrics_dir, '**', '*.rb')
       ).each { |f| load f }
     end
   end
