@@ -40,6 +40,12 @@ describe "loading metrics" do
     end.should_not raise_error
   end
 
+  it "doesn't try to load directories" do
+    lambda do
+      Modesty.load_all_metrics!
+    end.should_not raise_error(Errno::EISDIR)
+  end
+
   it "actually loads the metrics" do
     [
       :baked_goods,
