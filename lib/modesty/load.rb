@@ -17,10 +17,7 @@ module Modesty
       )
     end
 
-    attr_writer :environment
-    def environment
-      @environment ||= 'development'
-    end
+    attr_accessor :environment
 
     def load_config!
       options = begin
@@ -29,7 +26,7 @@ module Modesty
         {}
       end
 
-      options = options[self.environment] || options['default']
+      options = options[self.environment] || options['default'] || options
 
       if options['paths']
         options['paths'].each do |data, path|
