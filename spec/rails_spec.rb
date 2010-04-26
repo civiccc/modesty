@@ -23,6 +23,10 @@ describe "bootstrap" do
           self
         end
 
+        def self.env
+          'test'
+        end
+
         def self.after_initialize
           yield
         end
