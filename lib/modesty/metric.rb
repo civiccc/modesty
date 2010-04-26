@@ -156,7 +156,6 @@ module Modesty
 
     def add_metric(metric)
       if self.metrics[metric.slug]
-        p self.metrics.keys
         raise "Metric #{metric.slug.inspect} already defined!"
       end
       self.metrics[metric.slug] = metric
