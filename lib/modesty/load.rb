@@ -17,6 +17,10 @@ module Modesty
       )
     end
 
+    attr_writer :environment
+    def environment
+      @environment ||= 'development'
+    end
 
     def load_config!
       options = begin
@@ -24,6 +28,8 @@ module Modesty
       rescue Errno::ENOENT
         {}
       end
+
+      options = options[self.environment]
 
       if options['paths']
         options['paths'].each do |data, path|

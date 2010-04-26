@@ -6,6 +6,7 @@ describe "the config file" do
       Modesty::TEST,
       'myapp'
     )
+    Modesty.environment = 'test'
     Modesty.load_config!
   end
 
@@ -31,6 +32,7 @@ describe "loading metrics" do
       'myapp'
     )
 
+    Modesty.environment = 'test'
     Modesty.metrics = {}
   end
 
@@ -67,6 +69,7 @@ end
 
 describe "Loading experiments" do
   before :all do
+    Modesty.environment = 'test'
     Modesty.load_all_metrics!
     Modesty.experiments = {}
   end
