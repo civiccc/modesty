@@ -29,7 +29,7 @@ module Modesty
         {}
       end
 
-      options = options[self.environment]
+      options = options[self.environment] || options['default']
 
       if options['paths']
         options['paths'].each do |data, path|
