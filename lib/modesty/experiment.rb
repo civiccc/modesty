@@ -103,12 +103,17 @@ module Modesty
     def choose_group
       return :control unless Modesty.identity #guests get the control group.
       self.data.get_cached_alternative(Modesty.identity) || self.generate_alternative(Modesty.identity)
+    rescue Datastore::ConnectionError
+      self.generate_alternative(Modesty.identity)
     end
 
     def generate_alternative(identity)
-      self.chooses(self.alternatives[ 
+      alternative = self.alternatives[ 
         "#{@slug}#{identity}".hash % self.alternatives.count
-      ])
+      ]
+      self.chooses(alternative)
+    ensure
+      return alternative
     end
 
     def num_users(alt=nil)

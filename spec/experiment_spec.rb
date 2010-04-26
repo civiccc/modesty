@@ -170,3 +170,40 @@ describe "A/B testing" do
     end
   end
 end
+
+describe "Datastore failing" do
+  before :each do
+    Modesty.data.flushdb
+    Modesty.experiments.clear
+    Modesty.metrics.clear
+
+    Modesty.new_metric :foo
+
+    Modesty.new_experiment :my_exp do |e|
+      e.metric :foo
+    end
+
+    Modesty.data.stub!(:get_cached_alternative).and_raise(
+      Modesty::Datastore::ConnectionError
+    )
+
+    Modesty.data.stub!(:register!).and_raise(
+      Modesty::Datastore::ConnectionError
+    )
+  end
+
+  it "fails gracefully for choose_group" do
+    Modesty.identify! 9876
+    first_group = second_group = nil
+    lambda do
+      first_group = Modesty.group :my_exp
+    end.should_not raise_error(Modesty::Datastore::ConnectionError)
+
+    lambda do
+      second_group = Modesty.group :my_exp
+    end.should_not raise_error(Modesty::Datastore::ConnectionError)
+
+    #should be consistent
+    first_group.should == second_group
+  end
+end
