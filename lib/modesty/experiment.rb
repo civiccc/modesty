@@ -75,10 +75,8 @@ module Modesty
 
     def chooses(alt, options={})
       if options.include? :for
-        #puts "registering a passed-in identity of #{options[:for].inspect}"
         self.data.register!(alt, options[:for])
       else
-        #puts "registering in chooses with Modesty.identity == #{Modesty.identity.inspect}"
         self.data.register!(alt, Modesty.identity)
       end
     end

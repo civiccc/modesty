@@ -136,5 +136,7 @@ describe Modesty::Metric, "Tracking Metrics" do
 
     m.distribution_by(:zings).should == {56=>{1=>1}, 97=>{7=>1, 4=>1}}
     m.distribution.should == {1 => 1, 7 => 1, 4 => 1}
+
+    m.distribution(:all).should == {1 => 1, 7 => 1, 4 => 1}
   end
 end

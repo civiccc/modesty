@@ -70,6 +70,7 @@ module Modesty
       data_type_by_range = :"#{data_type}_by_range"
       define_method(data_type) do |*dates|
         date_or_range = parse_date_or_range(*dates)
+
         if date_or_range.is_a? Range
           if self.data_respond_to? data_type_by_range
             self.data.send(data_type_by_range, date_or_range)
@@ -78,7 +79,7 @@ module Modesty
               self.data.send(data_type, date)
             end
           end
-        elsif date_or_range.is_a? Date
+        elsif date_or_range.is_a?(Date) || date_or_range == :all
           self.data.send(data_type, date_or_range)
         end
       end
@@ -97,7 +98,7 @@ module Modesty
               self.data.send(data_type, sym, date)
             end
           end
-        else
+        elsif date_or_range.is_a?(Date) || date_or_range == :all
           return self.data.send(data_type, sym, date_or_range)
         end
       end
