@@ -42,6 +42,10 @@ module Modesty
       @parent = parent
     end
 
+    def inspect
+      "#<Modesty::Metric(#{self.slug.inspect})>"
+    end
+
     def data
       @data ||= (Modesty.data.class)::MetricData.new(self)
     end

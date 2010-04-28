@@ -44,6 +44,10 @@ module Modesty
       @slug = slug
     end
 
+    def inspect
+      "#<Modesty::Experiment:(#{self.slug.inspect})>"
+    end
+
     ATTRIBUTES = [
       :description,
     ]
