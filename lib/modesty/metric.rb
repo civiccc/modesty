@@ -115,19 +115,22 @@ module Modesty
       end
 
       with = options[:with] || {}
-      with = Hash[with.map do |k,v|
+      plural_with = Hash[with.map do |k,v|
         [k.to_s.pluralize.to_sym, v]
       end]
 
-      with[:users] ||= Modesty.identity if Modesty.identity
+      plural_with[:users] ||= Modesty.identity if Modesty.identity
       self.experiments.each do |exp|
         # only track the for the experiment group if
         # the user has previously hit the experiment
         identity_slug = exp.identity_for(self)
         identity = if identity_slug
-          i = with[identity_slug]
+          i = plural_with[identity_slug]
           raise IdentityError, """
-            #TODO
+            #{exp.inspect} requires #{self.inspect} to be tracked
+            with #{identity_slug.to_s.singularize.to_sym.inspect}.
+
+            It was tracked :with => #{with.inspect}
           """.squish unless i
           i
         else
@@ -136,13 +139,13 @@ module Modesty
         if identity
           alt = exp.data.get_cached_alternative(identity)
           if alt
-            (self/(exp.slug/alt)).data.track!(count, with)
+            (self/(exp.slug/alt)).data.track!(count, plural_with)
           end
         end
       end
 
-      self.data.track!(count, with)
-      @parent.track!(count, with) if @parent
+      self.data.track!(count, plural_with)
+      @parent.track!(count, :with => with) if @parent
     end
 
     def /(sym)

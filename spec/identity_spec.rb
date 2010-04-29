@@ -32,7 +32,9 @@ describe Modesty, "contextual identity" do
     Modesty.metrics.clear
     Modesty.data.flushdb
 
-    Modesty.new_metric :donation_amount
+    Modesty.new_metric :donation_amount do |m|
+      m.submetric :birthday_wish
+    end
     Modesty.new_metric :donation
     Modesty.new_metric :creation
 
@@ -96,7 +98,7 @@ describe Modesty, "contextual identity" do
 
     # user 500, who is in the experiment group, donates $30 to user 700's wish
     Modesty.with_identity 500 do
-      Modesty.track! :donation_amount, 30, :with => {:creator => 700}
+      Modesty.track! :donation_amount/:birthday_wish, 30, :with => {:creator => 700}
     end
 
     # a guest donates $15 to user 700's wish
