@@ -32,7 +32,7 @@ module Modesty
       def metric(sym, options={})
         @exp.metrics << (Modesty.metrics[sym] || raise(
           Modesty::NoMetricError,
-          "Undefined metric #{s.inspect} in experiment #{@exp}"
+          "Undefined metric #{sym.inspect} in experiment #{@exp}"
         ))
         if options[:by]
           @exp.metric_contexts.merge!({sym => options[:by].to_s.pluralize.to_sym})
@@ -57,7 +57,7 @@ module Modesty
       self.metric_contexts[sym]
     end
 
-    attr_reader *ATTRIBUTES 
+    attr_reader *ATTRIBUTES
     attr_reader :slug
     attr_reader :metrics
 
@@ -110,7 +110,7 @@ module Modesty
     end
 
     def generate_alternative(identity)
-      alternative = self.alternatives[ 
+      alternative = self.alternatives[
         "#{@slug}#{identity}".hash % self.alternatives.count
       ]
       self.chooses(alternative)
