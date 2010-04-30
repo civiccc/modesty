@@ -18,7 +18,7 @@ describe Modesty::Metric, "Creating Metrics" do
   it "can create a metric with a block" do
     m = Modesty.new_metric :foo do |m|
       m.description "Foo"
-    end 
+    end
     m.slug.should == :foo
     m.description.should == "Foo"
     Modesty.metrics[:foo].should == m
@@ -87,6 +87,31 @@ describe Modesty::Metric, "Tracking Metrics" do
       lambda { Modesty.track! :foo, 3 }.should_not raise_error
       Modesty.metrics[:foo].count.to_i.should == i*3
     end
+  end
+
+  it "can fetch a metric for a date" do
+    now = Time.now
+    Time.stub!(:now).and_return(now-1.day)
+    25.times {|i| Modesty.track! :foo}
+    Modesty.metrics[:foo].count((now-1.day).to_date).should == 25
+  end
+
+  it "can fetch a metric over a date range" do
+    now = Time.now
+    Time.stub!(:now).and_return(now-1.day)
+    25.times {|i| Modesty.track! :foo}
+    Time.stub!(:now).and_return(now)
+    50.times {|i| Modesty.track! :foo}
+    Modesty.metrics[:foo].count((now-1.day).to_date..(now.to_date)).should == [25, 50]
+  end
+
+  it "can fetch a metric over a date range as array" do
+    now = Time.now
+    Time.stub!(:now).and_return(now-1.day)
+    25.times {|i| Modesty.track! :foo}
+    Time.stub!(:now).and_return(now)
+    50.times {|i| Modesty.track! :foo}
+    Modesty.metrics[:foo].count((now-1.day).to_date, now.to_date).should == [25, 50]
   end
 
   it "can track one submetric" do

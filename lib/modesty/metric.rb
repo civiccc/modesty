@@ -62,10 +62,13 @@ module Modesty
     end
 
     def parse_date_or_range(start=nil,fin=nil)
-      if fin.nil?
-        parse_date(start)
-      else
+      puts start.inspect, fin.inspect unless start.nil? && fin.nil?
+      if fin
         parse_date(start)..parse_date(fin)
+      elsif start.is_a?(Range)
+        parse_date(start.first)..parse_date(start.last)
+      else
+        parse_date(start)
       end
     end
 
@@ -75,15 +78,16 @@ module Modesty
       define_method(data_type) do |*dates|
         date_or_range = parse_date_or_range(*dates)
 
-        if date_or_range.is_a? Range
-          if self.data_respond_to? data_type_by_range
+        case date_or_range
+        when Range
+          if self.data.respond_to? data_type_by_range
             self.data.send(data_type_by_range, date_or_range)
           else
             date_or_range.map do |date|
               self.data.send(data_type, date)
             end
           end
-        elsif date_or_range.is_a?(Date) || date_or_range == :all
+        when Date, :all
           self.data.send(data_type, date_or_range)
         end
       end
