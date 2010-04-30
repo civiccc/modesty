@@ -62,7 +62,6 @@ module Modesty
     end
 
     def parse_date_or_range(start=nil,fin=nil)
-      puts start.inspect, fin.inspect unless start.nil? && fin.nil?
       if fin
         parse_date(start)..parse_date(fin)
       elsif start.is_a?(Range)
