@@ -221,3 +221,13 @@ describe "Datastore failing" do
     first_group.should == second_group
   end
 end
+
+describe "regression for 740de0b1f" do
+  it "doesn't blow up on startup" do
+    Modesty.api.instance_variable_set("@experiments", nil)
+    lambda do
+      Modesty.new_experiment :foo do
+      end
+    end.should_not raise_error
+  end
+end

@@ -148,8 +148,8 @@ module Modesty
     end
 
     def add_experiment(exp)
-      raise Error, "Experiment already defined!" if @experiments[exp.slug]
-      @experiments[exp.slug] = exp
+      raise Error, "Experiment already defined!" if self.experiments[exp.slug]
+      self.experiments[exp.slug] = exp
     end
 
     # For tracking metrics in an experiment, use:
