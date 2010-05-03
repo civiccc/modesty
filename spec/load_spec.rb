@@ -4,7 +4,8 @@ describe "the config file" do
   before :all do
     Modesty.root = File.join(
       Modesty::TEST,
-      'myapp'
+      'myapp',
+      'modesty'
     )
     Modesty.environment = 'test'
     Modesty.load_config!
@@ -15,7 +16,7 @@ describe "the config file" do
       File.expand_path(
         File.join(
           File.dirname(__FILE__),
-          "../test/myapp/experiments/metrics"
+          "../test/myapp/modesty/metrics"
         )
       )
   end
@@ -33,7 +34,7 @@ describe "loading metrics" do
     )
 
     Modesty.environment = 'test'
-    Modesty.metrics = {}
+    Modesty.metrics.clear
   end
 
   it "can load metrics" do
@@ -63,15 +64,15 @@ describe "loading metrics" do
 
   after :all do
     Modesty.root = nil
-    Modesty.metrics = {}
   end
 end
 
 describe "Loading experiments" do
   before :all do
     Modesty.environment = 'test'
+    Modesty.metrics.clear
+    Modesty.experiments.clear
     Modesty.load_all_metrics!
-    Modesty.experiments = {}
   end
 
   it "can load experiments" do
@@ -82,10 +83,5 @@ describe "Loading experiments" do
 
   it "actually loads experiments" do
     Modesty.experiments.should include :cookbook
-  end
-
-  after :all do
-    Modesty.metrics = {}
-    Modesty.experiments = {}
   end
 end

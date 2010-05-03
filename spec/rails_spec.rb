@@ -1,14 +1,8 @@
-require 'modesty'
-
 describe "bootstrap" do
   before :all do
-    Modesty.root = File.join(
-      Modesty::TEST,
-      'myapp'
-    )
-    Modesty.metrics = {}
-    Modesty.experiments = {}
-    Modesty.load!
+    Modesty.data.flushdb
+    Modesty.metrics.clear
+    Modesty.experiments.clear
 
     unless defined? Rails
       class Rails
@@ -32,10 +26,8 @@ describe "bootstrap" do
         end
       end
     end
-  end
 
-  it "can bootstrap" do
-    lambda { require 'modesty/frameworks/rails.rb' }.should_not raise_error
+    require 'modesty/frameworks/rails'
   end
 
   it "bootstraps Redis" do

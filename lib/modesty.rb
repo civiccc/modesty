@@ -18,8 +18,9 @@ require 'modesty/identity.rb'
 require 'modesty/metric.rb'
 require 'modesty/experiment.rb'
 require 'modesty/load.rb'
-$:.shift
 
 if defined? Rails
   require 'modesty/frameworks/rails'
 end
+
+$:.shift

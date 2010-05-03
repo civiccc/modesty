@@ -6,4 +6,4 @@ test:
 
   paths:
     experiments: experiments
-    metrics: experiments/metrics
+    metrics: metrics

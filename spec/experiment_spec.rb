@@ -1,8 +1,9 @@
 require 'modesty'
 
 describe Modesty::Experiment, "creating an experiment" do
-  before :all do
-    Modesty.metrics = {}
+  before :each do
+    Modesty.metrics.clear
+    Modesty.experiments.clear
     Modesty.new_metric :foo do |m|
       m.description "Foo"
       m.submetric :bar do |m|
@@ -13,31 +14,31 @@ describe Modesty::Experiment, "creating an experiment" do
     Modesty.new_metric :baz do |m|
       m.description "Baz"
     end
-  end
 
-  it "can create an experiment with a block" do
-    e = Modesty.new_experiment(:creation_page) do |m|
+    @e = Modesty.new_experiment(:creation_page) do |m|
       m.description "Three versions of the creation page"
       m.alternatives :heavyweight, :lightweight
       m.metrics :foo/:bar, :baz
     end 
 
-    Modesty.experiments.should include :creation_page
-    Modesty.experiments[:creation_page].should == e
-
-    e.metrics.should include Modesty.metrics[:foo/:bar]
-    e.metrics.should include Modesty.metrics[:baz]
-    e.alternatives.should == [:control, :heavyweight, :lightweight]
-    e.description.should == "Three versions of the creation page"
-  end
-
-  it "uses [:control, :experiment] as the default experiment groups" do
-    e = Modesty.new_experiment :ab_test do |e|
+    @f = Modesty.new_experiment :ab_test do |e|
       e.description "only two groups"
       e.metrics :baz
     end
+  end
 
-    e.alternatives.should == [:control, :experiment]
+  it "can create an experiment with a block" do
+    Modesty.experiments.should include :creation_page
+    Modesty.experiments[:creation_page].should == @e
+
+    @e.metrics.should include Modesty.metrics[:foo/:bar]
+    @e.metrics.should include Modesty.metrics[:baz]
+    @e.alternatives.should == [:control, :heavyweight, :lightweight]
+    @e.description.should == "Three versions of the creation page"
+  end
+
+  it "uses [:control, :experiment] as the default experiment groups" do
+    @f.alternatives.should == [:control, :experiment]
   end
 
   it "auto-creates metrics" do
