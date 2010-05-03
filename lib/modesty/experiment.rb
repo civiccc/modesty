@@ -1,5 +1,7 @@
 module Modesty
   class Experiment
+    class Error < StandardError; end
+
     class Builder
       def method_missing(name, *args)
         if Experiment::ATTRIBUTES.include?(name) && args.count > 0
@@ -69,8 +71,17 @@ module Modesty
       @alternatives ||= [:control, :experiment]
     end
 
-    def metrics
+    def metrics(alt=nil)
       @metrics ||= []
+      return @metrics unless alt
+      raise Error, <<-msg.squish unless self.alternatives.include? alt
+        Unrecognized alternative #{alt.inspect} for #{self.inspect}.
+        Available alternatives: #{self.alternatives.inspect}
+      msg
+
+      Hash[@metrics.map do |m|
+        [m.slug, m/(self.slug/alt)]
+      end]
     end
 
     def data
@@ -132,11 +143,12 @@ module Modesty
   end
 
   module ExperimentMethods
-    attr_accessor :experiments
+    def experiments
+      @experiments ||= {}
+    end
 
     def add_experiment(exp)
-      @experiments ||= {}
-      raise "Experiment already defined!" if @experiments[exp.slug]
+      raise Error, "Experiment already defined!" if @experiments[exp.slug]
       @experiments[exp.slug] = exp
     end
 

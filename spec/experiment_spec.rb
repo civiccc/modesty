@@ -52,6 +52,19 @@ describe Modesty::Experiment, "creating an experiment" do
     Modesty.metrics.keys.should include :baz/:ab_test/:control
     Modesty.metrics.keys.should include :baz/:ab_test/:experiment
   end
+
+  it "grabs metrics nicely with e.metrics(alt)" do
+    @e.alternatives.each do |alt|
+      @e.metrics(alt).should == {
+        :foo/:bar => Modesty.metrics[:foo/:bar/:creation_page/alt],
+        :baz      => Modesty.metrics[:baz/:creation_page/alt],
+      }
+    end
+
+    lambda do
+      @e.metrics(:i_dont_exist)
+    end.should raise_error(Modesty::Experiment::Error)
+  end
 end
 
 describe "A/B testing" do
