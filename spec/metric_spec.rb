@@ -133,7 +133,7 @@ describe Modesty::Metric, "Tracking Metrics" do
   end
 
   it "raises Modesty::NoMetricError if it can't find your metric" do
-    lambda { Modesty.track! :oh_noes }.should raise_error Modesty::NoMetricError
+    lambda { Modesty.track! :oh_noes }.should raise_error Modesty::Metric::Error
   end
 
   it "can track with custom data" do
