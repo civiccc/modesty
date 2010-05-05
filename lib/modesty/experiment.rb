@@ -5,11 +5,17 @@ module Modesty
 
   module ExperimentMethods
     def experiments
-      @experiments ||= {}
+      @experiments ||= Hash.new do |h, k|
+        raise Experiment::Error, <<-msg.squish
+          Unrecognized experiment #{k.inspect}.
+        msg
+      end
     end
 
     def add_experiment(exp)
-      raise Error, "Experiment already defined!" if self.experiments[exp.slug]
+        raise Experiment::Error, <<-msg if self.experiments.include? exp.slug
+          Experiment #{exp.slug.inspect} already defined!
+        msg
       self.experiments[exp.slug] = exp
     end
 
@@ -38,8 +44,8 @@ module Modesty
       end
     end
 
-    def experiment(exp, options={}, &blk)
-      exp = self.experiments[exp]
+    def experiment(sym, options={}, &blk)
+      exp = self.experiments[sym]
 
       identity = decide_identity(options)
 

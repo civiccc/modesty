@@ -86,6 +86,12 @@ describe "A/B testing" do
     end
   end
 
+  it "raises Modesty::Experiment::MissingError if exp is missing" do
+    lambda do
+      Modesty.group(:idontexist)
+    end.should raise_error(Modesty::Experiment::Error)
+  end
+
   it "assigns guests to :control" do
     Modesty.identify! nil
     Modesty.group(:ab_test).should == :control

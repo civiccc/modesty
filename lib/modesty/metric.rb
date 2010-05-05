@@ -7,13 +7,17 @@ module Modesty
     attr_writer :metrics
 
     def metrics
-      @metrics ||= {}
+      @metrics ||= Hash.new do |h, k|
+        raise Metric::Error, <<-msg.squish
+          Unrecognized metric #{k.inspect}
+        msg
+      end
     end
 
     def add_metric(metric)
-      if self.metrics[metric.slug]
-        raise "Metric #{metric.slug.inspect} already defined!"
-      end
+      raise Metric::Error <<-msg if self.metrics.include? metric.slug
+        Metric #{metric.slug.inspect} already defined!
+      msg
       self.metrics[metric.slug] = metric
     end
 
@@ -26,11 +30,7 @@ module Modesty
 
     #Tracking
     def track!(sym, *args)
-      if self.metrics.include? sym
-        self.metrics[sym].track! *args
-      else
-        raise Metric::Error, "Unrecognized metric #{sym.inspect}"
-      end
+      self.metrics[sym].track! *args
     end
   end
 

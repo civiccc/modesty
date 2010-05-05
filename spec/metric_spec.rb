@@ -6,7 +6,7 @@ describe Modesty::Metric, "Creating Metrics" do
   end
 
   before :each do
-    Modesty.metrics = {}
+    Modesty.metrics.clear
   end
 
   it "can create a metric without a block" do
@@ -47,10 +47,6 @@ describe Modesty::Metric, "Creating Metrics" do
     Modesty.metrics[:foo/:bar/:baz].parent.should_not == nil
     Modesty.metrics[:foo/:bar/:baz].parent.slug.should == :foo/:bar
   end
-
-  after :all do
-    Modesty.metrics = {}
-  end
 end
 
 describe Modesty::Metric, "Tracking Metrics" do
@@ -60,7 +56,7 @@ describe Modesty::Metric, "Tracking Metrics" do
 
   before :all do
     Modesty.set_store :redis, :mock => true
-    Modesty.metrics = {}
+    Modesty.metrics.clear
     Modesty.new_metric :foo do |foo|
       foo.description "Foo"
 
