@@ -2,29 +2,67 @@ module Modesty
   class Experiment
 
     def stats
-      @stats ||= []
+      @stats ||= Hash.new do |hash, key|
+        raise Error, <<-msg.squish
+          Unrecognized stat #{key.inspect}
+        msg
+      end
     end
 
     def reports(*args)
-      self.stats.map { |s| s.report(*args) }
+      self.stats.values.map { |s| s.report(*args) }
     end
 
     class Builder
-      def distribution(metric, options={})
-        @exp.stats << DistributionStat.new(@exp, metric, options)
+      def distribution(name, options={}, &blk)
+        @exp.stats[name] = DistributionStat.new(@exp, name, options, &blk)
       end
 
-      def conversion(num, denom, options={})
-        @exp.stats << ConversionStat.new(@exp, num, denom, options)
+      def conversion(name, options={}, &blk)
+        @exp.stats[name] = ConversionStat.new(@exp, name, options, &blk)
+      end
+    end
+
+    class ArgumentProxy
+      def initialize(obj, *args)
+        @obj = obj
+        @args = args
+      end
+
+      def inspect
+        "#<ArgumentProxy[ #{@obj.inspect} ]>"
+      end
+
+      def method_missing(meth, *args)
+        data = @obj.send(meth, *(args + @args))
+        # [Jay] #TODO: Hack alert!
+        # this doesn't take into account Metric#all,
+        # which returns an Array for either a date range
+        # or a single day
+        data = data.sum if data.is_a?(Array)
+        data
       end
     end
 
     class Stat
+      def initialize(exp, name, options={}, &blk)
+        @exp = exp
+        @name = name
+        @get_data = blk || default_get_data(options[:on])
+      end
+
+      def title
+        @name.to_s.split(/_/).map(&:capitalize).join(' ')
+      end
+
       def report(*args)
+        sig = significance(*args)
+        sig = "not significant" if sig.nil?
         return <<-report
 
-          ===#{title}===
-          #{significance(*args).inspect}
+          === #{title} ===
+          #{analysis(*args).inspect}
+          Significance: #{sig}
         report
       end
 
@@ -32,16 +70,26 @@ module Modesty
         sig = self.significance
         !sig.nil? && sig <= tolerance
       end
+
+      private
+      def argument_proxy_hash(hsh, *args)
+        Hash[
+          hsh.map do |k, v|
+            [k, ArgumentProxy.new(v, *args)]
+          end
+        ]
+      end
+
+      def data_for(alt, *args)
+        data = @get_data.call(argument_proxy_hash(@exp.metrics(alt), *args))
+      end
     end
 
     class DistributionStat < Stat
-      def initialize(exp, metric_sym, options={})
-        @exp = exp
-        @metric_sym = metric_sym
-      end
-
-      def title
-        "Distribution stats on #{@exp.slug.inspect} for #{@metric_sym.inspect}"
+      def default_get_data(on_param)
+        lambda do |metrics|
+          metrics[on_param].distribution
+        end
       end
 
       def inspect
@@ -51,7 +99,7 @@ module Modesty
       def data(*args)
         Hash[
           @exp.alternatives.map do |a|
-            [a, @exp.metrics(a)[@metric_sym].distribution(*args)]
+            [a, data_for(a, *args)]
           end
         ]
       end
@@ -67,26 +115,28 @@ module Modesty
     end
 
     class ConversionStat < Stat
-      def initialize(exp, num, denom, options={})
-        @exp = exp
-        @num_sym = num
-        @denom_sym = denom
-      end
-
-      def title
-        "Count of #{@num_sym} out of #{@denom_sym}"
-      end
-
-      def data(*args)
-        @exp.alternatives.map do |a|
-          num_count = @exp.metrics(a)[@num_sym].count(*args)
-          denom_count = @exp.metrics(a)[@denom_sym].count(*args)
+      def default_get_data(on_param)
+        lambda do |metrics|
+          num_count = metrics[on_param[0]].count
+          denom_count = metrics[on_param[1]].count
           [num_count, denom_count - num_count]
         end
       end
 
+      def analysis(*args)
+        Hash[
+          @exp.alternatives.map do |a|
+            [a, data_for(a, *args)]
+          end
+        ]
+      end
+
+      def data(*args)
+        analysis.values
+      end
+
       def inspect
-        "#<Modesty::Experiment::ConversionStat[ (on #{@exp.slug}) (of #{@num_sym.inspect})/(#{@denom_sym.inspect}) ]>"
+        "#<Modesty::Experiment::ConversionStat[ #{@name} ]>"
       end
 
       def significance(*args)

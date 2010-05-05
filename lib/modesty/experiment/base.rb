@@ -6,7 +6,7 @@ module Modesty
     end
 
     def inspect
-      "#<Modesty::Experiment:(#{self.slug.inspect})>"
+      "#<Modesty::Experiment[ #{self.slug.inspect} ]>"
     end
 
     ATTRIBUTES = [
