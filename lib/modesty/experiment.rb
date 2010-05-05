@@ -78,4 +78,5 @@ end
 require 'modesty/experiment/base'
 require 'modesty/experiment/builder'
 require 'modesty/experiment/data'
-#require 'modesty/experiment/stats'
+require 'modesty/experiment/significance'
+require 'modesty/experiment/stats'
