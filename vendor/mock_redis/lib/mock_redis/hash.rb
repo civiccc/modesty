@@ -40,6 +40,14 @@ class MockRedis
       end
     end
 
+    def hvals(key)
+      case h = self.hash[key]
+      when nil ; []
+      when Hash ; h.values
+      else fail "Not a hash"
+      end
+    end
+
     def hlen(key)
       case h = self.hash[key]
       when nil ; 0
