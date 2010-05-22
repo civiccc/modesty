@@ -1,9 +1,8 @@
 class Array
   unless method_defined? :histogram
     def histogram
-      hsh = {}
+      hsh = Hash.new(0)
       self.each do |e|
-        hsh[e] ||= 0
         hsh[e] += 1
       end
       hsh
