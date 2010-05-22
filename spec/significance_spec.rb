@@ -134,13 +134,13 @@ describe "Statistics with blocks" do
     three_days = @e.stats[:special_conv].data(3.days.ago..Date.today)
     three_days.should == [
       [
+        @e.metrics(:experiment)[:foo].unique(:users, 3.days.ago, :today).sum,
+        @e.metrics(:experiment)[:foo].count(3.days.ago, Date.today).sum
+      ],
+      [
         @e.metrics(:control)[:foo].unique(:users, 3.days.ago..Date.today).sum,
         @e.metrics(:control)[:foo].count(3.days.ago, :today).sum
       ],
-      [
-        @e.metrics(:experiment)[:foo].unique(:users, 3.days.ago, :today).sum,
-        @e.metrics(:experiment)[:foo].count(3.days.ago, Date.today).sum
-      ]
     ]
   end
 end
