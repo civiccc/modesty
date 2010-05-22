@@ -77,22 +77,23 @@ module Modesty
       end
 
       def unique(param, date)
-        data.scard(key_for_with(param, date))
+        data.hlen(key_for_with(param, date))
       end
 
       def all(param, date)
-        data.smembers(key_for_with(param, date)).map(&:to_i?)
+        data.hkeys(key_for_with(param, date)).map(&:to_i?)
       end
 
       def distribution_by(param, date)
-        ids = data.smembers(key_for_with(param, date)).map(&:to_i?)
-        h = {}
-        ids.each do |id|
-          h[id] = Hash[data.hgetall(key_for_with(param, date, id)).map do |k,v|
-            [k.to_i?, v.to_i]
-          end]
-        end
-        return h
+        data.hvals(self.key_for_with(param, date)).map(&:to_i?).histogram
+      end
+
+      def aggregate_by(param, date)
+        Hash[
+          data.hgetall(self.key_for_with(param, date)).map do |k,v|
+            [k.to_i?, v.to_i?]
+          end
+        ]
       end
 
       def track!(count, with_args)
@@ -113,9 +114,7 @@ module Modesty
       end
 
       def add_param_counts(date, count, param, id)
-        data.sadd(key_for_with(:__keys__), param)
-        data.sadd(key_for_with(param, date), id)
-        data.hincrby(key_for_with(param, date, id), count, 1)
+        data.hincrby(key_for_with(param, date), id, count)
       end
 
       def count_unidentified_user(date)

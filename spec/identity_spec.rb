@@ -108,7 +108,9 @@ describe Modesty, "contextual identity" do
 
     @group_exp.distribution.should == {45 => 1, 30 => 1, 15 => 1}
     @group_ctrl.distribution.should == {}
-    @group_exp.distribution_by(:creators).should == {700 => {45 => 1, 30 => 1, 15 => 1}}
+    @group_exp.aggregate_by(:creators).should == {700 => 90}
+    @group_ctrl.aggregate_by(:creators).should == {}
+    @group_exp.distribution_by(:creators).should == {90 => 1}
     @group_ctrl.distribution_by(:creators).should == {}
 
     @group_exp.all(:creators).should == [700]

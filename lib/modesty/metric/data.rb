@@ -27,7 +27,10 @@ module Modesty
     end
 
 
-    [:count, :distribution].each do |data_type|
+    [
+      :count,
+      :distribution
+    ].each do |data_type|
       data_type_by_range = :"#{data_type}_by_range"
       define_method(data_type) do |*dates|
         date_or_range = parse_date_or_range(*dates)
@@ -47,7 +50,12 @@ module Modesty
       end
     end
 
-    [:all, :unique, :distribution_by].each do |data_type|
+    [
+      :all,
+      :unique,
+      :distribution_by,
+      :aggregate_by
+    ].each do |data_type|
       by_range = :"#{data_type}_by_range"
       define_method(data_type) do |sym, *dates|
         sym = sym.to_sym
