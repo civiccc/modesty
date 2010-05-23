@@ -13,7 +13,7 @@ module Modesty
     def config_path
       @config_path ||= File.join(
         Modesty.root,
-        'config/modesty.yml'
+        '../config/modesty.yml'
       )
     end
 
@@ -23,6 +23,7 @@ module Modesty
       options = begin
         YAML.load(File.read(self.config_path))
       rescue Errno::ENOENT
+        puts "No config file found"
         {}
       end
 

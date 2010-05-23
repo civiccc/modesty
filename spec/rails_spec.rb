@@ -1,3 +1,5 @@
+require 'modesty'
+
 describe "bootstrap" do
   before :all do
     Modesty.data.flushdb

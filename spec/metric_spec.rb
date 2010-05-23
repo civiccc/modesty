@@ -158,8 +158,8 @@ describe Modesty::Metric, "Tracking Metrics" do
     m.distribution.should == {1 => 1, 7 => 1, 4 => 1}
 
     #one zing has one track, and one zing has 11 (= 4+7) tracks.
-    m.distribution_by(:zings).should == {1 => 1, 11 => 1}
     m.aggregate_by(:zings).should == {56 => 1, 97 => 11}
+    m.distribution_by(:zings).should == {1 => 1, 11 => 1}
 
     m.distribution(:all).should == {1 => 1, 7 => 1, 4 => 1}
   end

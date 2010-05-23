@@ -70,6 +70,7 @@ end
 describe "A/B testing" do
   before :all do
     Modesty.set_store :redis, :mock => true
+    Modesty.data.flushdb
   end
 
   it "Selects evenly between alternatives" do
