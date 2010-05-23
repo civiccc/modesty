@@ -31,9 +31,9 @@ describe "bootstrap" do
   end
 
   it "bootstraps Redis" do
-    Modesty.data.store.should be_an_instance_of Redis::Client
-    Modesty.data.store.instance_variable_get("@port").should == 6379
-    Modesty.data.store.instance_variable_get("@host").should == 'localhost'
+    Modesty.data.store.should be_an_instance_of Redis
+    Modesty.data.store.client.port.should == 6379
+    Modesty.data.store.client.host.should == 'localhost'
   end
 
   it "loads metrics" do
