@@ -1,21 +1,38 @@
 $:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
 
-require "rubygems"
 require "test/unit"
-require "redis"
+require "logger"
+require "stringio"
 
 begin
   require "ruby-debug"
 rescue LoadError
 end
 
-def capture_stderr
-  stderr = $stderr
-  $stderr = StringIO.new
+def prepare(redis)
+  begin
+    redis.flushdb
+    redis.select 14
+    redis.flushdb
+    redis.select 15
+    redis
+  rescue Errno::ECONNREFUSED
+    puts <<-EOS
 
-  yield
+      Cannot connect to Redis.
 
-  $stderr = stderr
+      Make sure Redis is running on localhost, port 6379.
+      This testing suite connects to the database 15.
+
+      To start the server:
+        rake start
+
+      To stop the server:
+        rake stop
+
+    EOS
+    exit 1
+  end
 end
 
 # Test::Unit loads a default test if the suite is empty, whose purpose is to
@@ -56,6 +73,7 @@ class Test::Unit::TestCase
   end
 
   def self.test(name, &block)
+    puts "Pending: #{caller[0]} (#{name})" unless block
     block ||= lambda { print "P" }
     define_method(test_name(name), &block)
   end
@@ -84,4 +102,17 @@ private
       subclass.send(:undef_method, meth.to_sym)
     end
   end
+end
+
+$VERBOSE = true
+
+require "redis"
+
+def capture_stderr
+  stderr = $stderr
+  $stderr = StringIO.new
+
+  yield
+
+  $stderr = stderr
 end

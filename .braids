@@ -9,7 +9,7 @@ vendor/mock_redis:
 vendor/redis-rb: 
   branch: master
   remote: braid/vendor/redis-rb
-  revision: 9e43fde887aa1bec9bf77cbcdd90371b52e5ba85
+  revision: 17d40d80388b536ec53a8f19bb1404e93a61650f
   squashed: true
   type: git
   url: git://github.com/ezmobius/redis-rb
