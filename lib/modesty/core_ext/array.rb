@@ -8,4 +8,14 @@ class Array
       hsh
     end
   end
+
+  def to_h
+    Hash[self]
+  end
+  
+  def hashmap
+    self.map do |e|
+      [e, yield(e)]
+    end.to_h
+  end
 end

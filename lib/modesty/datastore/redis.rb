@@ -86,11 +86,9 @@ module Modesty
 
       def distribution_by(param, date)
         members, counts = all_members_and_counts(param,date)
-        Hash[
-          counts.histogram.map do |k,v|
-            [k.to_i?,v]
-          end
-        ]
+        counts.histogram.map do |k,v|
+          [k.to_i?,v]
+        end.to_h
       end
 
       def aggregate_by(param, date)

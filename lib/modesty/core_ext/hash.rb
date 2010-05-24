@@ -13,4 +13,14 @@ class Hash
     end
     hash
   end
+
+  def map_values!(&blk)
+    self.each do |k,v|
+      self[k] = yield(v)
+    end
+  end
+
+  def map_values(&blk)
+    self.dup.map_values!(&blk)
+  end
 end
