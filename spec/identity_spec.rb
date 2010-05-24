@@ -116,5 +116,24 @@ describe Modesty, "contextual identity" do
     @group_exp.all(:creators).should == [700]
     @group_exp.all(:users).sort.should == [500, 600]
     @group_exp.data.unidentified_users.should == 1
+
+    @e.aggregates(:donation_amount).should == {
+      :experiment => {
+        500 => 0,
+        700 => 90
+      },
+      :control => {
+        600 => 0
+      }
+    }
+    @e.distributions(:donation_amount).should == {
+      :experiment => {
+        0 => 1,
+        90 => 1,
+      },
+      :control => {
+        0 => 1
+      }
+    }
   end
 end

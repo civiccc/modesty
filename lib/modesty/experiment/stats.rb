@@ -13,6 +13,28 @@ module Modesty
       self.stats.values.map { |s| s.report(*args) }
     end
 
+    def aggregates(metric, *args)
+      metric = metric.slug if metric.is_a? Metric
+      context = self.identity_for(metric) || :users
+      self.alternatives.hashmap do |a|
+        agg = self.metrics(a)[metric].aggregate_by(context, *args)
+        agg = agg.sum if agg.is_a?(Array)
+        self.users(a).hashmap { 0 }.merge!(agg)
+      end
+    end
+
+    def distributions(metric, *args)
+      aggregates(metric, *args).map_values! do |agg|
+        agg.values.histogram
+      end
+    end
+
+    def dist_analysis(metric, *args)
+      Significance.dist_significance(
+        distributions(metric, *args)
+      )
+    end
+
     class Builder
       def distribution(name, options={}, &blk)
         @exp.stats[name] = DistributionStat.new(@exp, name, options, &blk)
