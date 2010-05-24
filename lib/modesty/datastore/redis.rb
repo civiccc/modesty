@@ -107,7 +107,11 @@ module Modesty
         # mget doesn't like an empty list
         return [[],[]] if members_keys.empty?
 
-        counts = data.mget(members_keys)
+        counts = begin
+          data.mget(*members_keys)
+        rescue ArgumentError
+          data.mget(members_keys)
+        end
         [members,counts]
       end
 
