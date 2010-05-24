@@ -40,8 +40,8 @@ describe Modesty, "contextual identity" do
 
     Modesty.new_experiment :creation_page do |e|
       e.metric :creation
-      e.metric :donation, :by => :creator
-      e.metric :donation_amount, :by => :creator
+      e.metric :donation, :as => :creator
+      e.metric :donation_amount, :as => :creator
     end
     @e = Modesty.experiments[:creation_page]
     Modesty.identify! nil

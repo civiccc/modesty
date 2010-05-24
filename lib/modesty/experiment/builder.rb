@@ -34,9 +34,14 @@ module Modesty
           Modesty::NoMetricError,
           "Undefined metric #{sym.inspect} in experiment #{@exp}"
         ))
-        if options[:by]
-          @exp.metric_contexts.merge!({sym => options[:by].to_s.pluralize.to_sym})
+        if as = options.delete(:as)
+          @exp.metric_contexts[sym] = as.to_s.pluralize.to_sym
         end
+
+        raise <<-msg.squish unless options.empty?
+          unrecognized options
+          #{options.keys.inspect}
+        msg
       end
     end
   end
