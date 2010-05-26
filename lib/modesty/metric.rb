@@ -14,6 +14,10 @@ module Modesty
       end
     end
 
+    def metrics_starting_with(name)
+      self.metrics.select{|k, v| k.to_s.starts_with?(name)}
+    end
+
     def add_metric(metric)
       raise Metric::Error, <<-msg if self.metrics.include? metric.slug
         Metric #{metric.slug.inspect} already defined!
