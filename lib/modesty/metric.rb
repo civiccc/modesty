@@ -15,7 +15,7 @@ module Modesty
     end
 
     def add_metric(metric)
-      raise Metric::Error <<-msg if self.metrics.include? metric.slug
+      raise Metric::Error, <<-msg if self.metrics.include? metric.slug
         Metric #{metric.slug.inspect} already defined!
       msg
       self.metrics[metric.slug] = metric
