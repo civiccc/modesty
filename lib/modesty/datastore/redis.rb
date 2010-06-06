@@ -27,7 +27,7 @@ module Modesty
 
     def method_missing(name, *args)
       @store.send(name, *args)
-    rescue Errno::ECONNREFUSED
+    rescue Exception => e
       raise ConnectionError
     end
 
