@@ -77,40 +77,23 @@ module Modesty
       end
 
       def unique(param, date)
-        data.scard(key_for_with(param, date))
+        data.hlen(key_for_with(param, date))
       end
 
       def all(param, date)
-        data.smembers(key_for_with(param, date)).map(&:to_i?)
+        data.hkeys(key_for_with(param, date)).map(&:to_i?)
       end
 
       def distribution_by(param, date)
-        members, counts = all_members_and_counts(param,date)
-        counts.histogram.map do |k,v|
-          [k.to_i?,v]
-        end.to_h
+        dist = data.hvals(key_for_with(param, date)).histogram
+        dist.map_values!(&:to_i?)
+        dist
       end
 
       def aggregate_by(param, date)
-        members, counts = all_members_and_counts(param,date)
-        Hash[members.map(&:to_i?).zip(counts.map(&:to_i?))]
-      end
-
-      def all_members_and_counts(param, date)
-        members = self.all(param, date)
-        members_keys = members.map do |m|
-          self.key_for_with(param,date,m)
-        end
-
-        # mget doesn't like an empty list
-        return [[],[]] if members_keys.empty?
-
-        counts = begin
-          data.mget(*members_keys)
-        rescue ArgumentError
-          data.mget(members_keys)
-        end
-        [members,counts]
+        agg = data.hgetall(key_for_with(param, date))
+        agg.map_values!(&:to_i?)
+        agg
       end
 
       def track!(count, with_args)
@@ -131,8 +114,7 @@ module Modesty
       end
 
       def add_param_counts(date, count, param, id)
-        data.sadd(key_for_with(param, date), id)
-        data.incrby(key_for_with(param, date, id), count)
+        data.hincrby(key_for_with(param, date), id, count)
       end
 
       def count_unidentified_user(date)
