@@ -32,9 +32,11 @@ module Modesty
       metric
     end
 
-    #Tracking
+    # Tracking
     def track!(sym, *args)
       self.metrics[sym].track! *args
+    rescue Modesty::Metric::Error
+      # Fail silently in the event that a metric is not found.
     end
   end
 
