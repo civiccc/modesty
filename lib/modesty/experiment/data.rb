@@ -29,8 +29,8 @@ module Modesty
       self.choose_group == alt
     end
 
-    def fetch_group
-      self.data.get_cached_alternative
+    def fetch_group(identity)
+      self.data.get_cached_alternative(identity)
     end
 
     def choose_group
