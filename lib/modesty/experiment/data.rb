@@ -5,48 +5,22 @@ module Modesty
     end
 
     def chooses(alt, options={})
-      if options.include? :for
-        self.data.register!(alt, options[:for])
-      else
-        self.data.register!(alt, Modesty.identity)
-      end
+      id = options.include?(:for) ? options[:for] : Modesty.identity
+
+      @group[id] = alt
+      self.data.register!(alt, options[:for])
+      self.data.register!(alt, Modesty.identity)
     end
 
-    attr_reader :last_value
-    def group(group=nil)
-      if block_given?
-        if group && self.choose_group == group
-          @last_value = yield
-        else
-          @last_value
-        end
-      else
-        self.choose_group
-      end
+    def group(id=Modesty.identity)
+      return :control unless id
+      @group ||= {}
+      @group[id] ||= set_group(id)
     end
 
+    # usage: `e.group?(:experiment)`
     def group?(alt)
-      self.choose_group == alt
-    end
-
-    def fetch_group(identity)
-      self.data.get_cached_alternative(identity)
-    end
-
-    def choose_group
-      return :control unless Modesty.identity #guests get the control group.
-      self.fetch_group(Modesty.identity) || self.generate_alternative(Modesty.identity)
-    rescue Datastore::ConnectionError
-      self.generate_alternative(Modesty.identity)
-    end
-
-    def generate_alternative(identity)
-      alternative = self.alternatives[
-        "#{@slug}#{identity}".hash % self.alternatives.count
-      ]
-      self.chooses(alternative)
-    ensure
-      return alternative
+      self.group == alt
     end
 
     def num_users(alt=nil)
@@ -60,5 +34,29 @@ module Modesty
     def users(alt=nil)
       self.data.users(alt)
     end
+
+  private
+    # used to fetch the cached alternative from redis
+    def fetch_group(identity)
+      self.data.get_cached_alternative(identity)
+    end
+
+    # this is the method with the fallbacks - fetch it from redis or create it.
+    def group_for(id)
+      self.fetch_group(Modesty.identity) || self.generate_alternative(Modesty.identity)
+    rescue Datastore::ConnectionError
+      self.generate_alternative(Modesty.identity)
+    end
+
+    # generates an alternative and stores it in redis
+    def generate_alternative(identity)
+      alternative = self.alternatives[
+        "#{@slug}#{identity}".hash % self.alternatives.count
+      ]
+      self.chooses(alternative)
+    ensure
+      return alternative
+    end
+
   end
 end

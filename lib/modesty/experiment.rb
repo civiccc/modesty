@@ -27,7 +27,7 @@ module Modesty
         exp.alternatives.each do |a|
           Modesty.new_metric(m.slug/exp.slug/a, m)
         end
-      end
+      endexp
       add_experiment(exp)
       exp
     end
@@ -50,7 +50,7 @@ module Modesty
       identity = decide_identity(options)
 
       self.with_identity identity do
-        yield exp
+        yield Experiment::Interface.new(exp)
       end
 
       exp.last_value
@@ -78,5 +78,6 @@ end
 require 'modesty/experiment/base'
 require 'modesty/experiment/builder'
 require 'modesty/experiment/data'
+require 'modesty/experiment/interface'
 require 'modesty/experiment/significance'
 require 'modesty/experiment/stats'
