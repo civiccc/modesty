@@ -1,0 +1,8 @@
+--- 
+vendor/core_ext: 
+  branch: master
+  remote: braid/vendor/core-ext
+  revision: c74d626e12b2527db2f85a15f818226d628fd5eb
+  squashed: true
+  type: git
+  url: git://github.com/jayferd/core_ext
