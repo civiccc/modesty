@@ -1,8 +1,0 @@
-Usage:
-
-r = MockRedis.new(:some, :cool => :options)
-
-now pretend r is a redis client.  see github.com/ezmobius/redis-rb.
-DO NOT USE IN PRODUCTION. PLZ. KTHX
-
-This was based on a random file in assaf's "vanity", but as I extended it, it seemed like it needed its own repo.
