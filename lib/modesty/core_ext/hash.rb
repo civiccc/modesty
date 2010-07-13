@@ -23,4 +23,17 @@ class Hash
   def map_values(&blk)
     self.dup.map_values!(&blk)
   end
+
+  def map!
+    self.keys.each do |k|
+      v = self.delete(k)
+      new_k, new_v = yield [k,v]
+      self[new_k] = new_v
+    end
+    self
+  end
+
+  def to_h
+    self
+  end
 end
