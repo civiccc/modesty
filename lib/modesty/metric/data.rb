@@ -83,7 +83,7 @@ module Modesty
     ).each do |data_type|
       define_method data_type do |*dates|
         context = if @experiment
-          @experiment.identity_for(self.parent) || :user
+          @experiment.identity_for(self.parent)
         else
           :user
         end
