@@ -126,6 +126,8 @@ module Modesty
 
       self.data.track!(count, with)
       @parent.track!(count, :with => with) if @parent
+    rescue Datastore::ConnectionError => e
+      Modesty.handle_error(e)
     end
   end
 end
