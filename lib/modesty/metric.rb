@@ -25,8 +25,14 @@ module Modesty
       self.metrics[metric.slug] = metric
     end
 
-    def new_metric(slug, parent=nil, &block)
-      metric = Metric.new(slug, parent)
+    def new_metric(slug, parent=nil, options={}, &block)
+      if parent.is_a? Hash
+        options=parent
+      else
+        options[:parent] = parent
+      end
+
+      metric = Metric.new(slug, options)
       yield Metric::Builder.new(metric) if block_given?
       add_metric(metric)
       metric

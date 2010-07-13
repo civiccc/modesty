@@ -13,6 +13,7 @@ module Modesty
     attr_reader *ATTRIBUTES
     attr_reader :slug
     attr_reader :parent
+    attr_reader :experiment
 
     # metrics should know what experiments use them,
     # to enable smart tracking.
@@ -20,9 +21,10 @@ module Modesty
       @experiments ||= []
     end
 
-    def initialize(slug, parent=nil)
+    def initialize(slug, options={})
       @slug = slug
-      @parent = parent
+      @parent = options[:parent]
+      @experiment = options[:experiment]
     end
 
     def inspect

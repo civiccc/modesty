@@ -25,9 +25,9 @@ module Modesty
       exp.metrics.each do |m|
         m.experiments << exp
         exp.alternatives.each do |a|
-          Modesty.new_metric(m.slug/exp.slug/a, m)
+          Modesty.new_metric(m.slug/exp.slug/a, :parent => m, :experiment => exp)
         end
-      endexp
+      end
       add_experiment(exp)
       exp
     end
