@@ -5,17 +5,23 @@ module Modesty
     end
 
     def chooses(alt, options={})
+      raise Experiment::Error, <<-msg.squish unless self.alternatives.include? alt
+        Unknown alternative #{alt.inspect}
+      msg
+
       id = options.include?(:for) ? options[:for] : Modesty.identity
 
-      @group[id] = alt
-      self.data.register!(alt, options[:for])
-      self.data.register!(alt, Modesty.identity)
+      raise IdentityError, <<-msg.squish unless id
+        Experiment#chooses doesn't work for guests.
+        Either identify globally or pass in :for => id
+      msg
+
+      self.data.register!(alt, id)
     end
 
     def group(id=Modesty.identity)
       return :control unless id
-      @group ||= {}
-      @group[id] ||= set_group(id)
+      fetch_or_generate_group(id)
     end
 
     # usage: `e.group?(:experiment)`
@@ -42,18 +48,21 @@ module Modesty
     end
 
     # this is the method with the fallbacks - fetch it from redis or create it.
-    def group_for(id)
-      self.fetch_group(Modesty.identity) || self.generate_alternative(Modesty.identity)
-    rescue Datastore::ConnectionError
-      self.generate_alternative(Modesty.identity)
+    def fetch_or_generate_group(id=Modesty.identity)
+      alt = begin
+        fetch_group(id)
+      rescue Datastore::ConnectionError
+        nil
+      end || generate_group(id)
     end
 
     # generates an alternative and stores it in redis
-    def generate_alternative(identity)
+    def generate_group(identity)
       alternative = self.alternatives[
         "#{@slug}#{identity}".hash % self.alternatives.count
       ]
-      self.chooses(alternative)
+      self.chooses(alternative, :for => identity)
+    rescue Datastore::ConnectionError
     ensure
       return alternative
     end

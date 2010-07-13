@@ -59,6 +59,10 @@ class MockRedis
     def ping
       "PONG"
     end
+
+    def pipelined
+      yield
+    end
   end
 
   include MiscMethods

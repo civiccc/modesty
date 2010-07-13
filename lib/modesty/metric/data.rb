@@ -27,38 +27,37 @@ module Modesty
     end
 
 
-    [
-      :count,
-      :distribution
-    ].each do |data_type|
-      data_type_by_range = :"#{data_type}_by_range"
-      define_method(data_type) do |*dates|
-        date_or_range = parse_date_or_range(*dates)
+    def count(*dates)
+      date_or_range = parse_date_or_range(*dates)
 
-        case date_or_range
-        when Range
-          if self.data.respond_to? data_type_by_range
-            self.data.send(data_type_by_range, date_or_range)
-          else
-            date_or_range.map do |date|
-              self.data.send(data_type, date)
-            end
+      case date_or_range
+      when Range
+        if self.data.respond_to? :count_by_range
+          self.data.count_range(date_or_range)
+        else
+          date_or_range.map do |date|
+            self.data.count(date)
           end
-        when Date, :all
-          self.data.send(data_type, date_or_range)
         end
+      when Date, :all
+        self.data.count(date_or_range)
       end
     end
 
+    # for grep:
+    # def all
+    # def unique
+    # def distribution_by
+    # def aggregate_by
     [
       :all,
       :unique,
       :distribution_by,
       :aggregate_by
     ].each do |data_type|
-      by_range = :"#{data_type}_by_range"
+      by_range = :"#{data_type}_range"
       define_method(data_type) do |sym, *dates|
-        sym = sym.to_sym
+        sym = sym.to_s.singularize.to_sym
         date_or_range = (dates.empty?) ? :all : parse_date_or_range(*dates)
         if date_or_range.is_a? Range
           if self.data.respond_to?(by_range)
@@ -74,6 +73,24 @@ module Modesty
       end
     end
 
+    # def distribution
+    # def aggregate
+    # helpers to use the default context if it's an experiment-generated metric
+    # otherwise default to users
+    %w(
+      distribution
+      aggregate
+    ).each do |data_type|
+      define_method data_type do |*dates|
+        context = if @experiment
+          @experiment.identity_for(self.parent) || :user
+        else
+          :user
+        end
+        send("#{data_type}_by", context, *dates)
+      end
+    end
+
     def track!(count=1, options={})
       if count.is_a? Hash
         options = count
@@ -81,17 +98,14 @@ module Modesty
       end
 
       with = options[:with] || {}
-      plural_with = Hash[with.map do |k,v|
-        [k.to_s.pluralize.to_sym, v]
-      end]
 
-      plural_with[:users] ||= Modesty.identity if Modesty.identity
+      with[:user] ||= Modesty.identity if Modesty.identity
       self.experiments.each do |exp|
         # only track the for the experiment group if
         # the user has previously hit the experiment
         identity_slug = exp.identity_for(self)
         identity = if identity_slug
-          i = plural_with[identity_slug]
+          i = with[identity_slug]
           raise IdentityError, """
             #{exp.inspect} requires #{self.inspect} to be tracked
             with #{identity_slug.to_s.singularize.to_sym.inspect}.
@@ -105,12 +119,12 @@ module Modesty
         if identity
           alt = exp.data.get_cached_alternative(identity)
           if alt
-            (self/(exp.slug/alt)).data.track!(count, plural_with)
+            (self/(exp.slug/alt)).data.track!(count, with)
           end
         end
       end
 
-      self.data.track!(count, plural_with)
+      self.data.track!(count, with)
       @parent.track!(count, :with => with) if @parent
     end
   end

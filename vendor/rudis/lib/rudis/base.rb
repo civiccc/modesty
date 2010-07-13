@@ -39,6 +39,7 @@ class Rudis
 
     def initialize(key, options={})
       @key = key
+      @redis = options.delete(:redis)
       @options = options
       @options.rmerge!(default_options)
     end

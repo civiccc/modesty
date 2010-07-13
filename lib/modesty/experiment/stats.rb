@@ -15,7 +15,7 @@ module Modesty
 
     def aggregates(metric, *args)
       metric = metric.slug if metric.is_a? Metric
-      context = self.identity_for(metric) || :users
+      context = self.identity_for(metric)
       self.alternatives.hashmap do |a|
         agg = self.metrics(a)[metric].aggregate_by(context, *args)
         agg = agg.sum if agg.is_a?(Array)
@@ -95,11 +95,9 @@ module Modesty
 
       private
       def argument_proxy_hash(hsh, *args)
-        Hash[
-          hsh.map do |k, v|
-            [k, ArgumentProxy.new(v, *args)]
-          end
-        ]
+        hsh.map_values do |v|
+          ArgumentProxy.new(v, *args)
+        end
       end
 
       def data_for(alt, *args)
@@ -119,11 +117,9 @@ module Modesty
       end
 
       def data(*args)
-        Hash[
-          @exp.alternatives.map do |a|
-            [a, data_for(a, *args)]
-          end
-        ]
+        @exp.alternatives.hashmap do |a|
+          data_for(a, *args)
+        end
       end
 
       def analysis(*args)
@@ -146,11 +142,9 @@ module Modesty
       end
 
       def analysis(*args)
-        Hash[
-          @exp.alternatives.map do |a|
-            [a, data_for(a, *args)]
-          end
-        ]
+        @exp.alternatives.hashmap do |a|
+          data_for(a, *args)
+        end
       end
 
       def data(*args)

@@ -35,7 +35,7 @@ module Modesty
           "Undefined metric #{sym.inspect} in experiment #{@exp}"
         ))
         if as = options.delete(:as)
-          @exp.metric_contexts[sym] = as.to_s.pluralize.to_sym
+          @exp.metric_contexts[sym] = as.to_sym
         end
 
         raise <<-msg.squish unless options.empty?

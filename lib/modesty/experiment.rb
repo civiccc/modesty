@@ -49,14 +49,17 @@ module Modesty
 
       identity = decide_identity(options)
 
+      interface = Experiment::Interface.new(exp, identity)
       self.with_identity identity do
-        yield Experiment::Interface.new(exp)
+        yield interface
       end
 
-      exp.last_value
+      interface.last_value
     end
 
-    def group?(sym)
+    def group?(sym, options={})
+      id = decide_identity(options)
+
       exp = sym.to_s.split(/\//)
       alt = exp.pop.to_sym
       exp = exp.join('/').to_sym
@@ -64,9 +67,10 @@ module Modesty
       exp.group? alt
     end
 
-    def group(sym)
+    def group(sym, options={})
+      id = decide_identity(options)
       exp = self.experiments[sym]
-      exp ? exp.group : :control
+      exp ? exp.group(id) : :control
     end
   end
 

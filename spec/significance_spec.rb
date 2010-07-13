@@ -23,14 +23,15 @@ describe "Significance" do
   end
 
   it "handles significant distribution data" do
-    @e.chooses :experiment
-    250.times do
-      Modesty.track! :foo, rand(200)
+    250.times do |uid|
+      @e.chooses :experiment, :for => uid
+      Modesty.track! :foo, rand(200), :with => {:user => uid}
     end
 
-    @e.chooses :control
-    250.times do
-      Modesty.track! :foo, rand(100)
+    250.times do |uid|
+      uid = 251 + uid
+      @e.chooses :control, :for => uid
+      Modesty.track! :foo, rand(100), :with => {:user => uid}
     end
 
     @foo_dist.should be_a Modesty::Experiment::DistributionStat
@@ -134,12 +135,12 @@ describe "Statistics with blocks" do
     three_days = @e.stats[:special_conv].data(3.days.ago..Date.today)
     three_days.should == [
       [
-        @e.metrics(:experiment)[:foo].unique(:users, 3.days.ago, :today).sum,
-        @e.metrics(:experiment)[:foo].count(3.days.ago, Date.today).sum
-      ],
-      [
         @e.metrics(:control)[:foo].unique(:users, 3.days.ago..Date.today).sum,
         @e.metrics(:control)[:foo].count(3.days.ago, :today).sum
+      ],
+      [
+        @e.metrics(:experiment)[:foo].unique(:users, 3.days.ago, :today).sum,
+        @e.metrics(:experiment)[:foo].count(3.days.ago, Date.today).sum
       ],
     ]
   end

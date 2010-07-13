@@ -20,8 +20,9 @@ module Modesty
     def with_identity(id)
       old_identity = Modesty.identity
       Modesty.identify! id
-      yield
+      ret = yield
       Modesty.identify! old_identity
+      ret
     end
   end
 

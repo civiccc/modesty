@@ -73,6 +73,10 @@ describe "A/B testing" do
     Modesty.data.flushdb
   end
 
+  before :each do
+    @e = Modesty.experiments[:creation_page]
+  end
+
   it "Selects evenly between alternatives" do
     (0..(3*100-1)).each do |i|
       Modesty.identify! i
@@ -145,22 +149,17 @@ describe "A/B testing" do
   end
 
   it "uses cached alternative" do
-    class Modesty::Experiment
-      alias old_generate generate_alternative
-      def generate_alternative
-        raise RuntimeError
-      end
+    # should ask Redis for the correct group
+    # instead of running generate_group
+    (1..10).each do |i|
+      Modesty.identify! i
+      Modesty.group :creation_page
     end
-    # should ask Redis for the correct alternative
-    # instead of running generate_alternative
-    lambda do
-      (0..(3*100-1)).each do |i|
-        Modesty.identify! i
-        Modesty.group :creation_page
-      end
-    end.should_not raise_error
-    class Modesty::Experiment
-      alias generate_alternative old_generate
+
+    @e.should_not_receive(:generate_group)
+    (1..10).each do |i|
+      Modesty.identify! i
+      Modesty.group :creation_page
     end
   end
 

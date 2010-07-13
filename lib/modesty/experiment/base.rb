@@ -23,7 +23,7 @@ module Modesty
     attr_reader :metrics
 
     def metric_contexts
-      @metric_contexts ||= {}
+      @metric_contexts ||= Hash.new(:user)
     end
 
     def alternatives

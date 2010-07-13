@@ -131,13 +131,13 @@ describe Modesty::Metric, "Tracking Metrics" do
   it "can track with custom data" do
     m = Modesty.metrics[:foo/:bar]
     lambda do
-      Modesty.track! :foo/:bar, :with => {:zing => 56}
+      Modesty.track! :foo/:bar, :with => {:zing => 56, :user => 1}
     end.should_not raise_error
     m.unique(:zings).should == 1
     m.all(:zings).should include 56
 
     lambda do
-      Modesty.track! :foo/:bar, :with => {:zing => 97}, :count => 4
+      Modesty.track! :foo/:bar, :with => {:zing => 97, :user => 2}, :count => 4
     end.should_not raise_error
     m.unique(:zings).should == 2
     m.all(:zings).should include 97
@@ -151,12 +151,12 @@ describe Modesty::Metric, "Tracking Metrics" do
     m.unique(:zings, Date.parse('1/1/2002')).should == 0
     m.unique(:zings, :all).should == 2
 
-    m.distribution.should == {1 => 1, 7 => 1, 4 => 1}
+    m.distribution.should == {1 => 1, 4 => 1}
 
     #one zing has one track, and one zing has 11 (= 4+7) tracks.
     m.aggregate_by(:zings).should == {56 => 1, 97 => 11}
     m.distribution_by(:zings).should == {1 => 1, 11 => 1}
 
-    m.distribution(:all).should == {1 => 1, 7 => 1, 4 => 1}
+    m.distribution(:all).should == {1 => 1, 4 => 1}
   end
 end
