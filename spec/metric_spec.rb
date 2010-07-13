@@ -51,11 +51,8 @@ end
 
 describe Modesty::Metric, "Tracking Metrics" do
   before :each do
-    Modesty.data.flushdb
-  end
-
-  before :all do
     Modesty.set_store :redis, :mock => true
+    Modesty.data.flushdb
     Modesty.metrics.clear
     Modesty.new_metric :foo do |foo|
       foo.description "Foo"
@@ -68,7 +65,6 @@ describe Modesty::Metric, "Tracking Metrics" do
         end
       end
     end
-    Modesty.data.flushdb
   end
 
   it "can track a metric" do
@@ -128,35 +124,56 @@ describe Modesty::Metric, "Tracking Metrics" do
     end
   end
 
-  it "can track with custom data" do
-    m = Modesty.metrics[:foo/:bar]
-    lambda do
-      Modesty.track! :foo/:bar, :with => {:zing => 56, :user => 1}
-    end.should_not raise_error
-    m.unique(:zings).should == 1
-    m.all(:zings).should include 56
+  describe "can track with custom data" do
+    before :each do
+      @m = Modesty.metrics[:foo/:bar]
+      lambda do
+        Modesty.track! :foo/:bar, :with => {:zing => 56, :user => 1}
+      end.should_not raise_error
+      @m.unique(:zings).should == 1
+      @m.all(:zings).should include 56
 
-    lambda do
-      Modesty.track! :foo/:bar, :with => {:zing => 97, :user => 2}, :count => 4
-    end.should_not raise_error
-    m.unique(:zings).should == 2
-    m.all(:zings).should include 97
+      lambda do
+        Modesty.track! :foo/:bar, :with => {:zing => 97, :user => 2}, :count => 4
+      end.should_not raise_error
+      @m.unique(:zings).should == 2
+      @m.all(:zings).should include 97
 
-    lambda do
-      Modesty.track! :foo/:bar, 7, :with => {:zing => 97}
-    end.should_not raise_error
-    m.unique(:zings).should == 2
-    m.all(:zings).count.should == 2
+      lambda do
+        Modesty.track! :foo/:bar, 7, :with => {:zing => 97}
+      end.should_not raise_error
+    end
 
-    m.unique(:zings, Date.parse('1/1/2002')).should == 0
-    m.unique(:zings, :all).should == 2
+    it "and count unique" do
+      @m.unique(:zings).should == 2
+      @m.unique(:zings, :all).should == 2
+    end
 
-    m.distribution.should == {1 => 1, 4 => 1}
+    it "and bucket by dates" do
+      @m.unique(:zings, Date.parse('1/1/2002')).should == 0
+    end
 
-    #one zing has one track, and one zing has 11 (= 4+7) tracks.
-    m.aggregate_by(:zings).should == {56 => 1, 97 => 11}
-    m.distribution_by(:zings).should == {1 => 1, 11 => 1}
+    it "and count all" do
+      @m.all(:zings).count.should == 2
+    end
 
-    m.distribution(:all).should == {1 => 1, 4 => 1}
+
+    it "and keep an aggregate by users" do
+      @m.aggregate.should == {1 => 1, 2 => 4}
+    end
+
+    it "and keep a distribution by users" do
+      @m.distribution.should == {1 => 1, 4 => 1}
+      @m.distribution(:all).should == {1 => 1, 4 => 1}
+    end
+
+    it "and keep an aggregate by custom data" do
+      @m.aggregate_by(:zings).should == {56 => 1, 97 => 11}
+    end
+
+    it "and keep a distribution by custom data" do
+      @m.distribution_by(:zings).should == {1 => 1, 11 => 1}
+    end
+
   end
 end
