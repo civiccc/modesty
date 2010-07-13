@@ -35,7 +35,7 @@ module Modesty
       args.map {|a| a.to_s}.map do |a|
         (a.is_a?(Date)) ? date_key(a) : a
       end.map do |k|
-        k.gsub(/[^\w\-]/,'_')
+        k.gsub(/[^\w\-\/]/,'_')
       end.unshift('modesty').join(':')
     end
 
