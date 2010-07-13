@@ -27,7 +27,7 @@ module Modesty
     def set_store(type, opts={})
       @data = case type.to_s
       when 'redis'
-        require 'modesty/datastore/redis'
+        require File.join(Modesty::LIB, 'modesty', 'datastore', 'redis')
         RedisData.new(opts)
       else
         puts "Unrecognized datastore #{type}.  Defaulting to MockRedis."
