@@ -25,10 +25,10 @@ module Modesty
       self.ping
     end
 
-    def method_missing(name, *args)
-      @store.send(name, *args)
+    def method_missing(name, *args, &blk)
+      @store.send(name, *args, &blk)
     rescue Exception => e
-      raise ConnectionError
+      raise ConnectionError, e.to_s
     end
 
     def self.keyify(*args)
