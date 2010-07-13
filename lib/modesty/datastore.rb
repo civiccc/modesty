@@ -39,6 +39,10 @@ module Modesty
     def data
       @data || set_store(:redis, :mock => true)
     end
+
+    def handle_error(e)
+      raise e
+    end
   end
 
   class API

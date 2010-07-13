@@ -17,6 +17,9 @@ module Modesty
       msg
 
       self.data.register!(alt, id)
+    rescue Datastore::ConnectionError => e
+      Modesty.handle_error(e)
+      alt
     end
 
     def group(id=Modesty.identity)
@@ -45,6 +48,9 @@ module Modesty
     # used to fetch the cached alternative from redis
     def fetch_group(identity)
       self.data.get_cached_alternative(identity)
+    rescue Datastore::ConnectionError => e
+      Modesty.handle_error(e)
+      nil
     end
 
     # this is the method with the fallbacks - fetch it from redis or create it.
@@ -62,8 +68,6 @@ module Modesty
         "#{@slug}#{identity}".hash % self.alternatives.count
       ]
       self.chooses(alternative, :for => identity)
-    rescue Datastore::ConnectionError
-    ensure
       return alternative
     end
 
