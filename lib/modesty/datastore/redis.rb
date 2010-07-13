@@ -48,32 +48,50 @@ module Modesty
         Modesty.data
       end
 
-      def key_for_with(param, *args)
-        RedisData.keyify(:metric_with, param, @metric.slug, *args)
+      def key_for_with(*args)
+        key(:with, *args)
+      end
+
+    # -*- raw counts -*- #
+      def count_key(date)
+        key(date, :count)
+      end
+
+      def add_counts(date, count)
+        data.incrby(count_key(date),  count)
       end
 
       def count(date)
-        data.get(self.key(date, 'count')).to_i
+        data.get(count_key(date)).to_i
       end
 
       def count_range(range)
-        keys = range.map { |d| self.key(d, 'count') }
+        keys = range.map { |d| count_key(d) }
         data.mget(keys).map(&:to_i?)
+      end
+
+    # -*- unidentified users -*- #
+      def count_unidentified_user(date)
+        data.incr(unidentified_users_key(date))
+      end
+
+      def unidentified_users_key(date)
+        key_for_with(:users, date, :unidentified)
       end
 
       def unidentified_users(date = :all)
-        data.get(key_for_with(:users, date, :unidentified)).to_i
+        data.get(unidentified_users_key(date)).to_i
       end
 
       def unidentified_users_range(range)
-        keys = range.map { |d| key_for_with(:users, d, :unidentified) }
+        keys = range.map { |d| unidentified_users_key(d) }
         data.mget(keys).map(&:to_i?)
       end
 
-      def distribution(date)
-        Hash[data.hgetall(self.key(date, :counts)).map do |k,v|
-          [k.to_i?, v.to_i]
-        end]
+    # -*- :with => params -*- #
+      def add_param_counts(date, count, param, id)
+      #puts "data.hincrby(#{key_for_with(param, date).inspect}, #{id.inspect}, #{count.inspect})"
+        data.hincrby(key_for_with(param, date), id, count)
       end
 
       def unique(param, date)
@@ -86,39 +104,28 @@ module Modesty
 
       def distribution_by(param, date)
         dist = data.hvals(key_for_with(param, date)).histogram
-        dist.map_values!(&:to_i?)
+        dist.map! { |k,v| [k,v].map(&:to_i?) }
         dist
       end
 
       def aggregate_by(param, date)
         agg = data.hgetall(key_for_with(param, date))
-        agg.map_values!(&:to_i?)
+        agg.map! { |k,v| [k,v].map(&:to_i?) }
         agg
       end
 
       def track!(count, with_args)
-        [:all, Date.today].each do |date|
-          self.add_counts(date, count)
+        data.pipelined do
+          [:all, Date.today].each do |date|
+            self.add_counts(date, count)
 
-          self.count_unidentified_user(date) unless with_args[:users]
+            self.count_unidentified_user(date) unless with_args[:user]
 
-          with_args.each do |param, id|
-            self.add_param_counts(date, count, param, id)
+            with_args.each do |param, id|
+              self.add_param_counts(date, count, param, id)
+            end
           end
         end
-      end
-
-      def add_counts(date, count)
-        data.incrby(self.key(date, :count),  count)
-        data.hincrby(self.key(date, :counts), count, 1)
-      end
-
-      def add_param_counts(date, count, param, id)
-        data.hincrby(key_for_with(param, date), id, count)
-      end
-
-      def count_unidentified_user(date)
-        data.incr(key_for_with(:users, date, :unidentified))
       end
 
     end
@@ -129,10 +136,7 @@ module Modesty
       end
 
       def key(*args)
-        ([
-          'modesty:experiments',
-          @experiment.slug.to_s.gsub(/\//,':')
-        ] + args.map { |a| a.to_s }).join(':')
+        RedisData.keyify(:experiments, @experiment.slug, *args)
       end
 
       def register!(alt, identity)
