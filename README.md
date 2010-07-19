@@ -8,11 +8,17 @@ A metric keeps track of things that happen, and ties in and disaggregates many d
     Modesty.new_metric :foo
 
 Your metric will now be available as `Modesty.metrics[:foo]`.
-You can track it with `Modesty.track! :foo`,
-and you can get a raw count with `Modesty.metrics[:foo].count`.
+You can track it with
+
+    Modesty.track! :foo`,
+
+You can get a raw count with
+
+    Modesty.metrics[:foo].count`.
+
 You can track multiple counts with `Modesty.track! :foo, 7`,
-or if you prefer `Modesty.track! :foo, :count => 7`,
-and you can get a distribution of these counts with `Modesty.metrics[:foo].distribution`.
+or, if you prefer, `Modesty.track! :foo, :count => 7`.
+
 Simple, huh?
 
 You can also pass in any sort of data when you track your metric.  For example,
