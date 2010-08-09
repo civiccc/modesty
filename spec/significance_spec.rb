@@ -106,7 +106,7 @@ describe "Statistics with blocks" do
       end
     end
 
-    (1..500).each do |i| 
+    (1..500).each do |i|
       Modesty.identify!(i)
       Modesty.group :baz
       Modesty.track! :foo, 1+rand(i)
@@ -133,15 +133,15 @@ describe "Statistics with blocks" do
 
   it "uses the blocks for conversion" do
     three_days = @e.stats[:special_conv].data(3.days.ago..Date.today)
-    three_days.should == [
-      [
-        @e.metrics(:control)[:foo].unique(:users, 3.days.ago..Date.today).sum,
-        @e.metrics(:control)[:foo].count(3.days.ago, :today).sum
-      ],
+    three_days.sort.should == [
       [
         @e.metrics(:experiment)[:foo].unique(:users, 3.days.ago, :today).sum,
         @e.metrics(:experiment)[:foo].count(3.days.ago, Date.today).sum
       ],
-    ]
+      [
+        @e.metrics(:control)[:foo].unique(:users, 3.days.ago..Date.today).sum,
+        @e.metrics(:control)[:foo].count(3.days.ago, :today).sum
+      ],
+    ].sort
   end
 end

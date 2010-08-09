@@ -1,11 +1,8 @@
 require 'modesty'
 
 describe Modesty::Metric, "Creating Metrics" do
-  before :all do
-    Modesty.set_store :redis, :mock => true
-  end
-
   before :each do
+    Modesty.set_store :redis, :mock => true
     Modesty.metrics.clear
   end
 

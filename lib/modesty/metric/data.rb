@@ -100,22 +100,22 @@ module Modesty
       with = options[:with] || {}
 
       with[:user] ||= Modesty.identity if Modesty.identity
+
       self.experiments.each do |exp|
         # only track the for the experiment group if
         # the user has previously hit the experiment
         identity_slug = exp.identity_for(self)
-        identity = if identity_slug
-          i = with[identity_slug]
-          raise IdentityError, """
+        identity = with[identity_slug]
+
+        if !identity && exp.metric_contexts.has_key?(self.slug)
+          raise IdentityError, <<-msg.squish
             #{exp.inspect} requires #{self.inspect} to be tracked
             with #{identity_slug.to_s.singularize.to_sym.inspect}.
 
             It was tracked :with => #{with.inspect}
-          """.squish unless i
-          i
-        else
-          Modesty.identity
+          msg
         end
+
         if identity
           alt = exp.data.get_cached_alternative(identity)
           if alt
