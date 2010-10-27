@@ -117,10 +117,7 @@ module Modesty
         end
 
         if identity
-          alt = exp.data.get_cached_alternative(identity)
-          if alt
-            (self/(exp.slug/alt)).data.track!(count, with)
-          end
+          (self/(exp.slug/alt)).data.track!(count, with)
         end
       end
 
