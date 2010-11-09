@@ -117,7 +117,6 @@ module Modesty
         end
 
         if identity
-          alt = exp.group(identity)
           (self/(exp.slug/alt)).data.track!(count, with)
         end
       end
