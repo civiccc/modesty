@@ -127,6 +127,54 @@ module Modesty
           end
         end
       end
+
+    end
+
+    class ExperimentData < Datastore::ExperimentData
+      def data
+        Modesty.data
+      end
+
+      def key(*args)
+        RedisData.keyify(:experiments, @experiment.slug, *args)
+      end
+
+      def register!(alt, identity)
+        old_alt = self.get_cached_alternative(identity)
+        if old_alt
+          data.srem(self.key(old_alt), identity)
+        end
+        data.sadd(self.key(alt), identity)
+        return alt
+      end
+
+      def get_cached_alternative(identity)
+        @experiment.alternatives.each do |alt|
+          if data.sismember(self.key(alt), identity)
+            return alt
+          end
+        end
+        return nil
+      end
+
+      def users(alt=nil)
+        if alt.nil? #return the union
+          data.sunion(*@experiment.alternatives.map {|a| self.key(a) })
+        else
+          data.smembers(self.key(alt))
+        end.map(&:to_i)
+      end
+
+      def num_users(alt=nil)
+        if alt.nil?
+          @experiment.alternatives.map do |alt|
+            data.scard(self.key(alt)).to_i
+          end.sum
+        else
+          data.scard(self.key(alt)).to_i
+        end
+      end
+
     end
   end
 end
