@@ -5,10 +5,16 @@ if Rails.version.match('^3')
         Modesty.root = File.join(Rails.root, 'modesty')
         Modesty.config_path = File.join(Rails.root, 'config', 'modesty.yml')
         Modesty.environment = Rails.env
-        Rails.configuration.after_initialize do
+      end
+
+      config.after_initialize do
+        begin
+          Modesty.load_with_redis!(config.redis)
+        rescue NoMethodError
           Modesty.load!
         end
       end
+
     end
   end
 else
