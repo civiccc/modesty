@@ -5,7 +5,9 @@ module Modesty
     end
 
     def initialize(options={})
-      if options['mock'] || options[:mock]
+      if options[:redis]
+        @store = options[:redis]
+      elsif options['mock'] || options[:mock]
         require File.join(
           Modesty::VENDOR, 'mock_redis', 'lib', 'mock_redis.rb'
         )
