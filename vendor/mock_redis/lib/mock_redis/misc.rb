@@ -17,11 +17,11 @@ class MockRedis
 
     def type(key)
       case thing = self.hash[key]
-        when nil: "none"
-        when String: "string"
-        when Array: "list"
-        when Set: "set"
-        when Hash: "hash"
+        when nil then "none"
+        when String then "string"
+        when Array then "list"
+        when Set then "set"
+        when Hash then "hash"
       end
     end
 

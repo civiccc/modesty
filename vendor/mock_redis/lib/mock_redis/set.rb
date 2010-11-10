@@ -6,8 +6,8 @@ class MockRedis
       fail_unless_set(key)
       value = value.to_s
       case set = self.hash[key]
-        when nil ; self.hash[key] = Set.new([value])
-        when Set ; set.add value
+        when nil then self.hash[key] = Set.new([value])
+        when Set then set.add value
       end
     end
 
@@ -15,23 +15,23 @@ class MockRedis
       value = value.to_s
       fail_unless_set(key)
       case set = self.hash[key]
-        when nil ; return
-        when Set ; set.delete(value)
+        when nil then return
+        when Set then set.delete(value)
       end
     end
 
     def sismember(key, value)
       fail_unless_set(key)
       case set = self.hash[key]
-        when nil ; return false ; puts "no set here"
-        when Set ; set.include?(value.to_s)
+        when nil then return false ; puts "no set here"
+        when Set then set.include?(value.to_s)
       end
     end
 
     def spop(key, val)
       fail_unless_set(key)
       case set = self.hash[key]
-        when nil ; nil
+        when nil then nil
         when Set
           el = set.to_a[rand(set.size)]
           set.delete el
@@ -49,24 +49,24 @@ class MockRedis
     def srandmember(key)
       fail_unless_set(key)
       case set = self.hash[key]
-        when nil ; nil
-        when Set ; set.to_a[rand(set.size)]
+        when nil then nil
+        when Set then set.to_a[rand(set.size)]
       end
     end
 
     def smembers(key)
       fail_unless_set(key)
       case set = self.hash[key]
-      when nil ; []
-      when Set ; set.to_a
+      when nil then []
+      when Set then set.to_a
       end
     end
 
     def scard(key)
       fail_unless_set(key)
       case set = self.hash[key]
-      when nil ; 0
-      when Set ; set.size
+      when nil then 0
+      when Set then set.size
       end
     end
 
