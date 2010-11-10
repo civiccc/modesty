@@ -23,7 +23,7 @@ module Modesty
       options = begin
         YAML.load(File.read(self.config_path))
       rescue Errno::ENOENT
-        puts "No config file found"
+        puts "No Modesty config file found"
         {}
       end
 
