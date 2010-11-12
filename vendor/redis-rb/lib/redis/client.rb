@@ -1,13 +1,8 @@
 class Redis
   class Client
-    MINUS    = "-".freeze
-    PLUS     = "+".freeze
-    COLON    = ":".freeze
-    DOLLAR   = "$".freeze
-    ASTERISK = "*".freeze
-
     attr_accessor :db, :host, :port, :password, :logger
     attr :timeout
+    attr :connection
 
     def initialize(options = {})
       @host = options[:host] || "127.0.0.1"
@@ -16,14 +11,14 @@ class Redis
       @timeout = (options[:timeout] || 5).to_i
       @password = options[:password]
       @logger = options[:logger]
-      @sock = nil
+      @connection = Connection.new
     end
 
     def connect
       connect_to(@host, @port)
       call(:auth, @password) if @password
       call(:select, @db) if @db != 0
-      @sock
+      self
     end
 
     def id
@@ -37,8 +32,10 @@ class Redis
     end
 
     def call_loop(*args)
-      process(args) do
-        loop { yield(read) }
+      without_socket_timeout do
+        process(args) do
+          loop { yield(read) }
+        end
       end
     end
 
@@ -52,30 +49,28 @@ class Redis
       without_socket_timeout do
         call(*args)
       end
+    rescue Errno::ECONNRESET
+      retry
     end
 
     def process(*commands)
       logging(commands) do
         ensure_connected do
-          @sock.write(join_commands(commands))
+          commands.each do |command|
+            connection.write(command)
+          end
+
           yield if block_given?
         end
       end
     end
 
     def connected?
-      !! @sock
+      connection.connected?
     end
 
     def disconnect
-      return unless connected?
-
-      begin
-        @sock.close
-      rescue
-      ensure
-        @sock = nil
-      end
+      connection.disconnect if connection.connected?
     end
 
     def reconnect
@@ -84,116 +79,39 @@ class Redis
     end
 
     def read
-
-      # We read the first byte using read() mainly because gets() is
-      # immune to raw socket timeouts.
       begin
-        reply_type = @sock.read(1)
-      rescue Errno::EAGAIN
+        connection.read
 
+      rescue Errno::EAGAIN
         # We want to make sure it reconnects on the next command after the
         # timeout. Otherwise the server may reply in the meantime leaving
         # the protocol in a desync status.
         disconnect
 
         raise Errno::EAGAIN, "Timeout reading from the socket"
+
+      rescue Errno::ECONNRESET
+        raise Errno::ECONNRESET, "Connection lost"
       end
-
-      raise Errno::ECONNRESET, "Connection lost" unless reply_type
-
-      format_reply(reply_type, @sock.gets)
     end
 
     def without_socket_timeout
-      ensure_connected do
-        begin
-          self.timeout = 0
-          yield
-        ensure
-          self.timeout = @timeout if connected?
-        end
+      connect unless connected?
+
+      begin
+        self.timeout = 0
+        yield
+      ensure
+        self.timeout = @timeout if connected?
       end
     end
 
   protected
 
-    def build_command(name, *args)
-      command = []
-      command << "*#{args.size + 1}"
-      command << "$#{string_size name}"
-      command << name
-
-      args.each do |arg|
-        arg = arg.to_s
-        command << "$#{string_size arg}"
-        command << arg
-      end
-
-      command
-    end
-
     def deprecated(old, new = nil, trace = caller[0])
       message = "The method #{old} is deprecated and will be removed in 2.0"
       message << " - use #{new} instead" if new
       Redis.deprecate(message, trace)
-    end
-
-    COMMAND_DELIMITER = "\r\n"
-
-    def join_commands(commands)
-      commands.map do |command|
-        build_command(*command).join(COMMAND_DELIMITER) + COMMAND_DELIMITER
-      end.join(COMMAND_DELIMITER) + COMMAND_DELIMITER
-    end
-
-    if "".respond_to?(:bytesize)
-      def string_size(string)
-        string.to_s.bytesize
-      end
-    else
-      def string_size(string)
-        string.to_s.size
-      end
-    end
-
-    def format_reply(reply_type, line)
-      case reply_type
-      when MINUS    then format_error_reply(line)
-      when PLUS     then format_status_reply(line)
-      when COLON    then format_integer_reply(line)
-      when DOLLAR   then format_bulk_reply(line)
-      when ASTERISK then format_multi_bulk_reply(line)
-      else raise ProtocolError.new(reply_type)
-      end
-    end
-
-    def format_error_reply(line)
-      raise "-" + line.strip
-    end
-
-    def format_status_reply(line)
-      line.strip
-    end
-
-    def format_integer_reply(line)
-      line.to_i
-    end
-
-    def format_bulk_reply(line)
-      bulklen = line.to_i
-      return if bulklen == -1
-      reply = @sock.read(bulklen)
-      @sock.read(2) # Discard CRLF.
-      reply
-    end
-
-    def format_multi_bulk_reply(line)
-      n = line.to_i
-      return if n == -1
-
-      reply = []
-      n.times { reply << read }
-      reply
     end
 
     def logging(commands)
@@ -211,21 +129,10 @@ class Redis
       end
     end
 
-    if defined?(Timeout)
-      TimeoutError = Timeout::Error
-    else
-      TimeoutError = Exception
-    end
-
     def connect_to(host, port)
-      begin
-        @sock = TCPSocket.new(host, port)
-      rescue TimeoutError
-        @sock = nil
-        raise
+      with_timeout(@timeout) do
+        connection.connect(host, port)
       end
-
-      @sock.setsockopt Socket::IPPROTO_TCP, Socket::TCP_NODELAY, 1
 
       # If the timeout is set we set the low level socket options in order
       # to make sure a blocking read will return after the specified number
@@ -237,15 +144,7 @@ class Redis
     end
 
     def timeout=(timeout)
-      secs   = Integer(timeout)
-      usecs  = Integer((timeout - secs) * 1_000_000)
-      optval = [secs, usecs].pack("l_2")
-
-      begin
-        @sock.setsockopt Socket::SOL_SOCKET, Socket::SO_RCVTIMEO, optval
-        @sock.setsockopt Socket::SOL_SOCKET, Socket::SO_SNDTIMEO, optval
-      rescue Errno::ENOPROTOOPT
-      end
+      connection.timeout = Integer(timeout * 1_000_000)
     end
 
     def ensure_connected
@@ -253,12 +152,15 @@ class Redis
 
       begin
         yield
-      rescue Errno::ECONNRESET, Errno::EPIPE, Errno::ECONNABORTED
+      rescue Errno::ECONNRESET, Errno::EPIPE, Errno::ECONNABORTED, Errno::EBADF
         if reconnect
           yield
         else
           raise Errno::ECONNRESET
         end
+      rescue Exception
+        disconnect
+        raise
       end
     end
 
@@ -275,9 +177,24 @@ class Redis
       end
 
       def ensure_connected(&block)
-        super do
-          synchronize(&block)
-        end
+        synchronize { super }
+      end
+    end
+
+    begin
+      require "system_timer"
+
+      def with_timeout(seconds, &block)
+        SystemTimer.timeout_after(seconds, &block)
+      end
+
+    rescue LoadError
+      warn "WARNING: using the built-in Timeout class which is known to have issues when used for opening connections. Install the SystemTimer gem if you want to make sure the Redis client will not hang." unless RUBY_VERSION >= "1.9" || RUBY_PLATFORM =~ /java/
+
+      require "timeout"
+
+      def with_timeout(seconds, &block)
+        Timeout.timeout(seconds, &block)
       end
     end
   end

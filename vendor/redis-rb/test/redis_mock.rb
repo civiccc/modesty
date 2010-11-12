@@ -1,23 +1,30 @@
 require "socket"
 
 module RedisMock
-  def self.start(port = 6380, &block)
+  def self.start(port = 6380)
     server = TCPServer.new("127.0.0.1", port)
 
-    session = server.accept
+    loop do
+      session = server.accept
 
-    while line = session.gets
-      parts = Array.new(line[1..-3].to_i) do
-        bytes = session.gets[1..-3].to_i
-        argument = session.read(bytes)
-        session.read(2) # Discard \r\n
-        argument
+      while line = session.gets
+        parts = Array.new(line[1..-3].to_i) do
+          bytes = session.gets[1..-3].to_i
+          argument = session.read(bytes)
+          session.read(2) # Discard \r\n
+          argument
+        end
+
+        response = yield(*parts)
+
+        if response.nil?
+          session.shutdown(Socket::SHUT_RDWR)
+          break
+        else
+          session.write(response)
+          session.write("\r\n")
+        end
       end
-
-      session.read(2) # Discard \r\n
-
-      session.write block.call(*parts)
-      session.write "\r\n"
     end
   end
 

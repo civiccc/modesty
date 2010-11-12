@@ -1,11 +1,17 @@
 require 'socket'
 
 class Redis
-  VERSION = "2.0.3"
+  VERSION = "2.1.1"
 
   class ProtocolError < RuntimeError
     def initialize(reply_type)
-      super("Protocol error, got '#{reply_type}' as initial reply byte")
+      super(<<-EOS.gsub(/(?:^|\n)\s*/, " "))
+      Got '#{reply_type}' as initial reply byte.
+      If you're running in a multi-threaded environment, make sure you
+      pass the :thread_safe option when initializing the connection.
+      If you're in a forking environment, such as Unicorn, you need to
+      connect to Redis after forking.
+      EOS
     end
   end
 
@@ -16,16 +22,26 @@ class Redis
   attr :client
 
   def self.connect(options = {})
+    options = options.dup
+
     require "uri"
 
     url = URI(options.delete(:url) || ENV["REDIS_URL"] || "redis://127.0.0.1:6379/0")
 
-    options[:host]     = url.host
-    options[:port]     = url.port
-    options[:password] = url.password
-    options[:db]       = url.path[1..-1].to_i
+    options[:host]     ||= url.host
+    options[:port]     ||= url.port
+    options[:password] ||= url.password
+    options[:db]       ||= url.path[1..-1].to_i
 
     new(options)
+  end
+
+  def self.current
+    Thread.current[:redis] ||= Redis.connect
+  end
+
+  def self.current=(redis)
+    Thread.current[:redis] = redis
   end
 
   def initialize(options = {})
@@ -95,6 +111,10 @@ class Redis
     @client.call(:substr, key, start, stop)
   end
 
+  def strlen(key)
+    @client.call(:strlen, key)
+  end
+
   def hgetall(key)
     Hash[*@client.call(:hgetall, key)]
   end
@@ -155,6 +175,10 @@ class Redis
     @client.call(:lindex, key, index)
   end
 
+  def linsert(key, where, pivot, value)
+    @client.call(:linsert, key, where, pivot, value)
+  end
+
   def lset(key, index, value)
     @client.call(:lset, key, index, value)
   end
@@ -167,8 +191,16 @@ class Redis
     @client.call(:rpush, key, value)
   end
 
+  def rpushx(key, value)
+    @client.call(:rpushx, key, value)
+  end
+
   def lpush(key, value)
     @client.call(:lpush, key, value)
+  end
+
+  def lpushx(key, value)
+    @client.call(:lpushx, key, value)
   end
 
   def rpop(key)
@@ -339,7 +371,7 @@ class Redis
   end
 
   def del(*keys)
-    _bool @client.call(:del, *keys)
+    @client.call(:del, *keys)
   end
 
   def rename(old_name, new_name)
@@ -354,6 +386,10 @@ class Redis
     _bool @client.call(:expire, key, seconds)
   end
 
+  def persist(key)
+    _bool @client.call(:persist, key)
+  end
+
   def ttl(key)
     @client.call(:ttl, key)
   end
@@ -364,6 +400,10 @@ class Redis
 
   def hset(key, field, value)
     _bool @client.call(:hset, key, field, value)
+  end
+
+  def hsetnx(key, field, value)
+    _bool @client.call(:hsetnx, key, field, value)
   end
 
   def hmset(key, *attrs)
@@ -404,6 +444,14 @@ class Redis
 
   def monitor(&block)
     @client.call_loop(:monitor, &block)
+  end
+
+  def debug(*args)
+    @client.call(:debug, *args)
+  end
+
+  def sync
+    @client.call(:sync)
   end
 
   def [](key)
@@ -621,19 +669,8 @@ private
 
 end
 
-begin
-  if RUBY_VERSION >= '1.9'
-    require 'timeout'
-    Redis::Timer = Timeout
-  else
-    require 'system_timer'
-    Redis::Timer = SystemTimer
-  end
-rescue LoadError
-  Redis::Timer = nil
-end
-
-require 'redis/client'
-require 'redis/pipeline'
-require 'redis/subscribe'
-require 'redis/compat'
+require "redis/connection" unless defined?(Redis::Connection)
+require "redis/client"
+require "redis/pipeline"
+require "redis/subscribe"
+require "redis/compat"
