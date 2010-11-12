@@ -8,11 +8,11 @@ begin
     gem.name = "modesty"
     gem.summary = %Q{Modesty is a really simple metrics and a/b testing framework that doesn't really do all that much.}
     gem.description = %Q{Modesty is a really simple metrics and a/b testing framework that doesn't really do all that much. It was inspired by assaf's Vanity (github.com/assaf/vanity).}
-    gem.email = "kmball11@gmail.com"
-    gem.homepage = "http://github.com/kball/modesty"
+    gem.email = "jay@causes.com"
+    gem.homepage = "http://github.com/causes/modesty"
     gem.authors = ["Kevin Ball"]
     gem.add_development_dependency "rspec"
-    gem.add_development_dependency "redis"
+    gem.add_runtime_dependency "redis"
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
 rescue LoadError
