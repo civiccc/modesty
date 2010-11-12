@@ -13,11 +13,9 @@ module Modesty
         )
         @store = MockRedis.new
       else
-        $:.unshift(File.join(
-          Modesty::VENDOR, 'redis-rb', 'lib'
-        ))
-        require 'redis'
-        $:.shift
+        $:.push(File.join(Modesty::VENDOR, 'redis-rb', 'lib'))
+          require 'redis'
+        $:.pop
 
         @store = Redis.new(options)
       end
