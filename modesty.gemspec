@@ -8,9 +8,9 @@ Gem::Specification.new do |s|
   s.version = "0.1.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Kevin Ball"]
-  s.date = %q{2010-11-11}
-  s.description = %q{Modesty is a really simple metrics and a/b testing framework that doesn't really do all that much. It was inspired by assaf's Vanity (github.com/assaf/vanity).}
+  s.authors = ["Jay Adkisson", "Kevin Ball", "Kristj\303\241n P\303\251tursson"]
+  s.date = %q{2010-11-13}
+  s.description = %q{Modesty is simple and scalable split testing and event tracking framework. It was inspired by assaf's Vanity (github.com/assaf/vanity).}
   s.email = %q{jay@causes.com}
   s.extra_rdoc_files = [
     "LICENSE",
@@ -81,6 +81,7 @@ Gem::Specification.new do |s|
      "vendor/redis-rb/benchmarking/pipeline.rb",
      "vendor/redis-rb/benchmarking/speed.rb",
      "vendor/redis-rb/benchmarking/suite.rb",
+     "vendor/redis-rb/benchmarking/thread_safety.rb",
      "vendor/redis-rb/benchmarking/worker.rb",
      "vendor/redis-rb/examples/basic.rb",
      "vendor/redis-rb/examples/dist_redis.rb",
@@ -88,35 +89,77 @@ Gem::Specification.new do |s|
      "vendor/redis-rb/examples/list.rb",
      "vendor/redis-rb/examples/pubsub.rb",
      "vendor/redis-rb/examples/sets.rb",
+     "vendor/redis-rb/examples/unicorn/config.ru",
+     "vendor/redis-rb/examples/unicorn/unicorn.rb",
      "vendor/redis-rb/lib/redis.rb",
      "vendor/redis-rb/lib/redis/client.rb",
      "vendor/redis-rb/lib/redis/compat.rb",
+     "vendor/redis-rb/lib/redis/connection.rb",
      "vendor/redis-rb/lib/redis/distributed.rb",
      "vendor/redis-rb/lib/redis/hash_ring.rb",
      "vendor/redis-rb/lib/redis/pipeline.rb",
      "vendor/redis-rb/lib/redis/subscribe.rb",
      "vendor/redis-rb/redis.gemspec",
+     "vendor/redis-rb/test/commands_on_hashes_test.rb",
+     "vendor/redis-rb/test/commands_on_lists_test.rb",
+     "vendor/redis-rb/test/commands_on_sets_test.rb",
+     "vendor/redis-rb/test/commands_on_sorted_sets_test.rb",
+     "vendor/redis-rb/test/commands_on_strings_test.rb",
+     "vendor/redis-rb/test/commands_on_value_types_test.rb",
+     "vendor/redis-rb/test/connection_handling_test.rb",
      "vendor/redis-rb/test/db/.gitignore",
+     "vendor/redis-rb/test/distributd_key_tags_test.rb",
+     "vendor/redis-rb/test/distributed_blocking_commands_test.rb",
+     "vendor/redis-rb/test/distributed_commands_on_hashes_test.rb",
+     "vendor/redis-rb/test/distributed_commands_on_lists_test.rb",
+     "vendor/redis-rb/test/distributed_commands_on_sets_test.rb",
+     "vendor/redis-rb/test/distributed_commands_on_strings_test.rb",
+     "vendor/redis-rb/test/distributed_commands_on_value_types_test.rb",
+     "vendor/redis-rb/test/distributed_commands_requiring_clustering_test.rb",
+     "vendor/redis-rb/test/distributed_connection_handling_test.rb",
+     "vendor/redis-rb/test/distributed_internals_test.rb",
+     "vendor/redis-rb/test/distributed_persistence_control_commands_test.rb",
+     "vendor/redis-rb/test/distributed_publish_subscribe_test.rb",
+     "vendor/redis-rb/test/distributed_remote_server_control_commands_test.rb",
+     "vendor/redis-rb/test/distributed_sorting_test.rb",
      "vendor/redis-rb/test/distributed_test.rb",
+     "vendor/redis-rb/test/distributed_transactions_test.rb",
+     "vendor/redis-rb/test/encoding_test.rb",
+     "vendor/redis-rb/test/helper.rb",
+     "vendor/redis-rb/test/internals_test.rb",
+     "vendor/redis-rb/test/lint/hashes.rb",
+     "vendor/redis-rb/test/lint/internals.rb",
+     "vendor/redis-rb/test/lint/lists.rb",
+     "vendor/redis-rb/test/lint/sets.rb",
+     "vendor/redis-rb/test/lint/sorted_sets.rb",
+     "vendor/redis-rb/test/lint/strings.rb",
+     "vendor/redis-rb/test/lint/value_types.rb",
+     "vendor/redis-rb/test/persistence_control_commands_test.rb",
+     "vendor/redis-rb/test/pipelining_commands_test.rb",
+     "vendor/redis-rb/test/publish_subscribe_test.rb",
      "vendor/redis-rb/test/redis_mock.rb",
-     "vendor/redis-rb/test/redis_test.rb",
+     "vendor/redis-rb/test/remote_server_control_commands_test.rb",
+     "vendor/redis-rb/test/sorting_test.rb",
      "vendor/redis-rb/test/test.conf",
-     "vendor/redis-rb/test/test_helper.rb"
+     "vendor/redis-rb/test/thread_safety_test.rb",
+     "vendor/redis-rb/test/transactions_test.rb",
+     "vendor/redis-rb/test/unknown_commands_test.rb",
+     "vendor/redis-rb/test/url_param_test.rb"
   ]
   s.homepage = %q{http://github.com/causes/modesty}
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.3.7}
-  s.summary = %q{Modesty is a really simple metrics and a/b testing framework that doesn't really do all that much.}
+  s.summary = %q{Modesty is simple and scalable split testing and event tracking framework.}
   s.test_files = [
-    "spec/significance_spec.rb",
+    "spec/load_spec.rb",
      "spec/metric_spec.rb",
-     "spec/rails_spec.rb",
+     "spec/significance_spec.rb",
+     "spec/redis_spec.rb",
+     "spec/core_ext_spec.rb",
      "spec/experiment_spec.rb",
      "spec/identity_spec.rb",
-     "spec/core_ext_spec.rb",
-     "spec/load_spec.rb",
-     "spec/redis_spec.rb",
+     "spec/rails_spec.rb",
      "test/myapp/modesty/experiments/cookbook.rb",
      "test/myapp/modesty/metrics/kitchen_metrics.rb",
      "test/myapp/modesty/metrics/stove/burner_metrics.rb"
